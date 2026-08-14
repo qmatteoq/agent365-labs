@@ -17,29 +17,55 @@ on:
         default: 'Manual deployment'
         type: string
 
+# Allow one concurrent deployment. Queued runs wait rather than cancel, so a
+# deployment is never interrupted half way through.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: 🐍 Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
+          cache: pip
 
       - name: 📦 Install MkDocs dependencies
         run: pip install -r requirements.txt
 
+      - name: 🏗️ Build the site
+        run: mkdocs build --strict
+
+      - name: ⚙️ Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: 📤 Upload site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write        # Deploy to Pages
+      id-token: write     # Verify the deployment originates from this workflow
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: 🚀 Deploy to GitHub Pages
-        run: mkdocs gh-deploy --force
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        id: deployment
+        uses: actions/deploy-pages@v4
 
       - name: 📊 Deployment summary
         run: |
@@ -51,5 +77,5 @@ jobs:
           else
             echo "**Trigger:** Push to main branch" >> $GITHUB_STEP_SUMMARY
           fi
-          echo "**Site URL:** https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Site URL:** ${{ steps.deployment.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
           echo "**Deployment time:** $(date -u)" >> $GITHUB_STEP_SUMMARY

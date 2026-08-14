@@ -96,7 +96,7 @@ pip install -r requirements.txt
 mkdocs serve
 ```
 
-The site is served at `http://127.0.0.1:8000/agent365-labs/`. Pushing to `main` deploys it to GitHub Pages through the `Deploy Documentation` workflow.
+The site is served at `http://127.0.0.1:8000/agent365-labs/`. Pushing to `main` builds the site and deploys it to GitHub Pages through the `Deploy Documentation` workflow, which uploads the build as an artifact rather than committing it to a branch.
 
 The theme and the `cc-card` and `cc-next` widgets are adapted from the [Copilot Developer Camp](https://github.com/microsoft/copilot-camp), used under the MIT License.
 
