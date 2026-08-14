@@ -1,0 +1,63 @@
+site_name: Agent 365 Labs
+site_description: Hands-on labs that onboard a working agent into Microsoft Agent 365.
+site_url: https://qmatteoq.github.io/agent365-labs
+repo_url: https://github.com/qmatteoq/agent365-labs
+repo_name: qmatteoq/agent365-labs
+edit_uri: ''                    # Disable edit button
+
+theme:
+  name: 'material'
+  palette:
+    scheme: default
+    primary: custom
+  icon:
+    repo: fontawesome/brands/github
+  features:
+    - navigation.tabs         # Top nav
+    - navigation.tabs.sticky  # Keep top nav visible
+    - navigation.sections
+    - toc.integrate
+    - content.code.copy
+    - content.tabs.link
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.snippets:
+      base_path: docs/includes
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - tables
+  - toc:
+      toc_depth: 2
+
+extra_javascript:
+  - https://unpkg.com/mermaid@11/dist/mermaid.min.js
+  - javascripts/mermaid-init.js
+  - javascripts/cc-card.js
+  - javascripts/cc-next.js
+
+extra_css:
+  - stylesheets/labStyles.css
+  - stylesheets/extra.css
+
+plugins:
+  - search
+
+nav:
+  - Home: 'index.md'
+  - Get started:
+    - Prerequisites: '00-prerequisites.md'
+  - Labs:
+    - 'Path 1 - Web app agent with user OBO':
+      - 'Lab A365-01A - .NET on Blazor Server': '01a-web-obo-dotnet.md'
+      - 'Lab A365-01B - Python on FastAPI': '01b-web-obo-python.md'
+      - 'Lab A365-01C - Node.js on Express': '01c-web-obo-nodejs.md'
+  - Reference:
+    - Sample prompts: '99-sample-prompts.md'

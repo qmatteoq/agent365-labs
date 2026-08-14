@@ -1,0 +1,7 @@
+# Python requirements for the Agent 365 Labs documentation site.
+# Run: pip install -r requirements.txt
+# Then: mkdocs serve
+
+# Pinned below MkDocs 2.0, which removes the plugin and theming systems.
+mkdocs>=1.6,<2.0
+mkdocs-material>=9.5,<10.0
