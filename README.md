@@ -3,7 +3,7 @@
 Hands-on labs that take a working agent and onboard it into **Microsoft Agent 365**, so the
 organization it runs in can see it, govern it, and hold it accountable.
 
-Every lab is written to be followed in a single sitting, with a terminal on one side and a browser
+Each lab is designed to be completed in a single sitting, with a terminal on one side and a browser
 on the other. You start from code that already works and finish with an agent that has an identity
 in your tenant, reports its activity to Microsoft Defender and the Microsoft 365 admin center, and
 can reach Microsoft 365 data on behalf of the person using it.
@@ -23,18 +23,16 @@ of them.
 | [A365-01C](./docs/01c-web-obo-nodejs.md) | Node.js | LangChain on Express, in TypeScript |
 
 Pick the stack you are most comfortable debugging in. The three labs reach the same destination and
-the Agent 365 concepts are identical, so nothing later depends on which one you chose.
+the Agent 365 concepts are identical, so nothing later depends on which one you choose.
 
 ## Before you start
 
-Every lab shares the same tooling, licensing, and permission requirements, and they are collected
-in one place so you can check them once:
+Every lab shares the same tooling, licensing, and permission requirements, collected in one place:
 
 - [Prerequisites](./docs/00-prerequisites.md)
 
 Work through that page before you open a lab. Two of the requirements, an Agent 365 licence in the
-tenant and admin consent on the agent's permissions, involve other people, and finding that out
-halfway through an exercise is the most common way to lose an afternoon.
+tenant and admin consent on the agent's permissions, involve other people.
 
 ## Extras
 
@@ -49,21 +47,21 @@ them and pick the lab up later.
 
 Most of the Agent 365 work is done by asking an AI coding assistant to do it for you, using the
 [Agent 365 Skills](https://github.com/microsoft/agent365-skills). Each step that uses a skill shows
-you four things: the prompt you type, what the skill is about to change, the CLI command or code it
-comes down to underneath, and how to verify it worked. If you would rather not use a coding
-assistant, read the third and fourth parts and ignore the rest. The labs work that way too.
+four things: the prompt you type, what the skill is about to change, the CLI command or code it
+comes down to underneath, and how to verify it worked. To complete the labs without a coding
+assistant, read the third and fourth parts and ignore the rest.
 
 ## Where the sample agents come from
 
 The starting points for these labs are the three sample agents in the
 [Agent 365 runbook repository](https://github.com/qmatteoq/agent365-runbook), under
-`01-scenarios/Web-App-Agent-User-OBO/0.Resources/Starting-point/`. They are the same agent three
-times over: a research assistant that answers questions about Microsoft products by searching the
+`01-scenarios/Web-App-Agent-User-OBO/0.Resources/Starting-point/`. They are the same agent in three
+stacks: a research assistant that answers questions about Microsoft products by searching the
 [Microsoft Learn MCP server](https://learn.microsoft.com/api/mcp) and citing what it found. None of
-them contains a single line of Agent 365 code, which is the point.
+them contains any Agent 365 code.
 
-> This is a first draft. The sample agents are still referenced from the runbook repository rather
-> than vendored into this one, so cloning them is currently a manual step described in each lab.
+> This is a first draft. The sample agents are still referenced from the runbook repository instead
+> of being vendored into this one, so cloning them is currently a manual step described in each lab.
 
 ## Feedback
 

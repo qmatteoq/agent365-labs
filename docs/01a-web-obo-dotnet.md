@@ -6,23 +6,19 @@
 
 ## Scenario
 
-You have an agent and it works. A user opens a web page, asks a question, the agent reasons over it,
-calls a few tools, and answers. From the outside it looks finished.
+You have a working agent: a user opens a web page, asks a question, and the agent reasons over it,
+calls tools, and answers. The agent has no identity in the tenant, reports no activity, and does not
+appear in the tenant inventory.
 
-From the point of view of the organization it runs in, that agent does not exist. Nobody can see it
-in the tenant inventory. Nobody knows what it did yesterday, on whose behalf, or which data it
-touched. If a security analyst asks which agents accessed customer mailboxes last week, your agent
-will not be part of the answer, not because it behaved well, but because it never told anyone
-anything.
+**Microsoft Agent 365** gives the agent:
 
-**Microsoft Agent 365** closes that gap. It gives the agent an identity in the tenant, a way to
-report its activity to Microsoft Defender, Microsoft Purview and the Microsoft 365 admin center, and
-a governed path to Microsoft 365 data.
+- An identity visible in the tenant inventory
+- Activity reporting to **Microsoft Defender**, **Microsoft Purview**, and the **Microsoft 365 admin center**
+- A governed path to Microsoft 365 data
 
-In this lab you will take a plain .NET agent running in a Blazor Server app, with no Agent 365 code
-in it whatsoever, and onboard it step by step. The path you will follow is **User On-Behalf-Of
-(OBO)**, which is the right choice when a human drives the agent: the user signs in, and everything
-the agent does is attributed back to that person, using that person's permissions.
+In this lab you take a plain .NET agent running in a Blazor Server app, with no Agent 365 code, and
+onboard it step by step. The auth path is **User On-Behalf-Of (OBO)**: the user signs in, and
+everything the agent does is attributed to that person using that person's permissions.
 
 ## Lab objectives
 
@@ -30,12 +26,12 @@ After completing this lab, you will be able to:
 
 - Register an agent blueprint and an agent identity in Microsoft Entra with the Agent 365 CLI
 - Explain why a blueprint cannot sign users in, and register the separate application that can
-- Acquire a user token addressed to the blueprint, and prove it is the right token by reading its claims
+- Acquire a user token addressed to the blueprint and verify its claims
 - Build the two-hop agent on-behalf-of token chain that lets an agent act for a signed-in user
 - Instrument a .NET agent with OpenTelemetry and the Agent 365 exporter
-- Emit the semantic spans Agent 365 accepts, and attribute them to the correct caller
+- Emit the semantic spans Agent 365 accepts, attributed to the correct caller
 - Give the agent access to Microsoft 365 data through the Work IQ MCP servers
-- Verify that activity actually arrives in Defender and in the Microsoft 365 admin center
+- Verify that activity arrives in Defender and in the Microsoft 365 admin center
 
 ## Prerequisites
 
@@ -53,36 +49,28 @@ cd agent365-runbook/01-scenarios/Web-App-Agent-User-OBO/0.Resources/Starting-poi
 It is a research assistant that answers questions about Microsoft products by searching the
 [Microsoft Learn MCP server](https://learn.microsoft.com/api/mcp) and citing what it found. It
 already contains the Microsoft Entra sign-in that the OBO path depends on, but that sign-in stays
-dormant until you fill the settings in, which is what Exercise 2 is for.
+dormant until you fill in the settings in Exercise 2.
 
 ## How the exercises work
 
-From Exercise 3 onwards, most steps are built the same way, so you always know what you are looking
-at:
+From Exercise 3 onwards, most steps follow the same structure:
 
 1. **What you type**, the prompt you give your coding assistant.
-2. **What the skill does**, the changes it is about to make, so nothing comes as a surprise.
-3. **Behind the scenes**, the CLI command or the code it all comes down to.
-4. **How to verify**, how to know it worked before you move on.
+2. **What the skill does**, the changes it makes.
+3. **Behind the scenes**, the CLI command or code involved.
+4. **How to verify**, how to confirm it worked before moving on.
 
-If you would rather do everything by hand, read parts 3 and 4 and ignore the rest. The lab works
-that way too. Exercise 2 is the exception, because signing users in with Entra is ordinary web app
-work rather than an Agent 365 task, so no skill covers it.
+To do everything by hand, read parts 3 and 4 and skip the rest. Exercise 2 is the exception: signing
+users in with Entra is ordinary web app work, so no skill covers it.
 
 ---
 
 ## Exercise 1: Run the agent as it is
 
-Before you add anything, make sure the agent works the way it arrived.
-
-Exercise 4 adds a fair number of moving parts, and if the agent is broken to begin with you will
-spend hours working out which layer is at fault. Start from something that answers questions
-correctly, and every failure afterwards is one you introduced.
+Confirm that the agent works before adding anything. Start from a known-good baseline so that any
+failure after this point is something you introduced.
 
 ### Step 1: Configure the Azure OpenAI connection
-
-The agent reasons using a model deployed in Azure OpenAI, so the first thing it needs to know is
-which resource to call and which deployment on it to use.
 
 Open `appsettings.json` and fill in the three values you collected in the prerequisites:
 
@@ -97,24 +85,21 @@ Open `appsettings.json` and fill in the three values you collected in the prereq
 }
 ```
 
-> The tenant id is easy to skim past and it is not optional if you work across more than one
-> tenant. Leave it out and the credential hands back a token from whichever tenant you last signed
-> in to, which may not own the Azure OpenAI resource, and the service answers with `HTTP 400` and
-> `Tenant provided in token does not match resource token`. Pinning the tenant avoids an error that
-> otherwise looks like a code problem.
+> The tenant id is required when you work across more than one tenant. Without it, the credential
+> returns a token from whichever tenant you last signed in to, and the service responds with
+> `HTTP 400` and `Tenant provided in token does not match resource token`.
 
 ### Step 2: Decide how the agent authenticates to Azure OpenAI
 
-The sample supports two ways of authenticating and chooses between them at startup with a simple
-rule: if an API key is configured, use key auth, and if not, use Entra credentials. There is no flag
-to flip, the presence or absence of the key is the switch.
+The sample supports two authentication methods. If an API key is configured, it uses key auth;
+otherwise it uses Entra credentials. The presence or absence of the key is the switch.
 
 |  | **Path A: Entra credentials** *(recommended)* | **Path B: API key** |
 | --- | --- | --- |
 | What it uses | `DefaultAzureCredential`, so your `az login` session locally and a managed identity once hosted on Azure | A resource key, sent as a bearer secret |
 | What you configure | Nothing beyond Step 1, you just need to be signed in | The key itself, kept in a secret store |
 | What you need access to | The **Cognitive Services OpenAI User** role on the resource | The resource keys |
-| Why you would pick it | No long-lived secret to leak or rotate, the call carries a real identity, and it is the only option in tenants where key auth is disabled by policy | Environments that still depend on keys |
+| Why you would pick it | No long-lived secret to leak or rotate; carries a real identity; the only option in tenants where key auth is disabled by policy | Environments that still depend on keys |
 
 For **Path A**, there is nothing to add to the configuration. Sign in to the tenant that owns the
 Azure OpenAI resource:
@@ -123,18 +108,18 @@ Azure OpenAI resource:
 az login --tenant <tenant of the Azure OpenAI resource>
 ```
 
-When you later deploy to Azure this path keeps working with no code change, because
-`DefaultAzureCredential` picks up the managed identity assigned to the App Service automatically.
+When deployed to Azure, `DefaultAzureCredential` picks up the managed identity assigned to the App
+Service automatically, so no code change is needed.
 
-For **Path B**, keep the key out of `appsettings.json`, which is committed. User secrets live
-outside the project folder entirely, so nothing you do can accidentally commit them:
+For **Path B**, keep the key out of `appsettings.json` (which is committed). User secrets are stored
+outside the project folder:
 
 ```bash
 dotnet user-secrets set "AzureOpenAI:ApiKey" "<your-key>"
 ```
 
-You can also set the `AzureOpenAI__ApiKey` environment variable instead, which is what you would do
-in a hosting environment where user secrets are not available.
+You can also set the `AzureOpenAI__ApiKey` environment variable, which is the approach for hosting
+environments where user secrets are not available.
 
 ### Step 3: Run the agent and ask it something
 
@@ -142,15 +127,15 @@ in a hosting environment where user secrets are not available.
 dotnet run
 ```
 
-The default `http` launch profile binds to `http://localhost:5140`, which is the address you will
-register as a redirect URI in the next exercise. Open it in a browser and ask a question:
+The default `http` launch profile binds to `http://localhost:5140`. This is the address you register
+as a redirect URI in the next exercise. Open it in a browser and ask a question:
 
 ```text
 What is Microsoft Entra Conditional Access?
 ```
 
-You should get a proper answer with links to Microsoft Learn at the end of it, because this agent
-grounds its answers in the Learn MCP server rather than answering from the model's own memory.
+You should get an answer with links to Microsoft Learn, because this agent grounds its answers in
+the Learn MCP server.
 
 > ✅ **Checkpoint.** The agent answers questions and cites its sources. There is still no trace of
 > Agent 365 anywhere.
@@ -159,51 +144,39 @@ grounds its answers in the Learn MCP server rather than answering from the model
 
 ## Exercise 2: Sign users in with Microsoft Entra
 
-Nothing in this exercise is specific to Agent 365. You are going to register an ordinary Entra
-application, point the agent at it, and read through the sign-in code that already ships in the
-sample. If you have built a web app that signs users in with Entra before, this will be familiar.
+Nothing in this exercise is specific to Agent 365. You register an ordinary Entra application, point
+the agent at it, and read through the sign-in code that ships in the sample.
 
-You do it first, before touching Agent 365 at all, because the OBO path attributes everything the
-agent does back to the person who asked for it, and it cannot do that until there is a signed-in
-person to attribute it to.
-
-One piece will be missing at the end. The token this sign-in eventually produces has to be addressed
-to the agent's blueprint, and the blueprint does not exist until Exercise 3. So this exercise gets
-you a registered sign-in client, the settings filled in and a clear picture of the code, and
-Exercise 3 supplies the last value and switches the whole thing on.
+The OBO path attributes everything the agent does to the signed-in user. One piece will be missing
+at the end: the token this sign-in produces must be addressed to the agent's blueprint, which does
+not exist until Exercise 3. This exercise registers the sign-in client and fills in the settings.
+Exercise 3 supplies the last value.
 
 ### Step 1: Create the app registration that signs users in
-
-Signing a user in means sending their browser to Entra and getting them back again, and Entra will
-only do that for an application it knows about.
 
 1. Go to the [Entra admin center](https://entra.microsoft.com) and navigate to **Identity**, then
    **Applications**, then **App registrations**.
 2. Select **New registration**.
-3. Give it a name that makes its role obvious, something like `my-agent-web-signin`. Exercise 3 adds
-   two more identities for this one agent, so a vague name will cost you time later.
+3. Give it a descriptive name, for example `my-agent-web-signin`. Exercise 3 adds two more identities
+   for this agent.
 4. For **Supported account types**, choose **Accounts in this organizational directory only (Single
    tenant)**.
 5. Under **Redirect URI**, select the **Web** platform and enter `http://localhost:5140/signin-oidc`,
    which is the callback address the default `http` profile in `Properties/launchSettings.json`
-   listens on.
+   uses.
 6. Select **Register**.
 
 You will land on the **Overview** blade. Copy the **Application (client) ID** and the **Directory
-(tenant) ID** and keep them somewhere handy, because you need both in Step 3.
+(tenant) ID** for Step 3.
 
-> The redirect URI has to match what the browser sees, scheme included. It is easy to register the
-> `https` address and then run the app over plain `http`, and Entra answers that with `AADSTS50011`,
-> which reads like a mistake in the app rather than a mismatched string. If you would rather run
-> over TLS, launch with `dotnet run --launch-profile https` and register
-> `https://localhost:7199/signin-oidc` instead. A registration can hold several redirect URIs, so
-> registering both now and picking later is perfectly reasonable.
+> The redirect URI must match what the browser sees, including the scheme. Registering `https` and
+> running over `http` causes `AADSTS50011`. To run over TLS, launch with
+> `dotnet run --launch-profile https` and register `https://localhost:7199/signin-oidc`. A
+> registration can hold several redirect URIs.
 
-> `localhost` and `127.0.0.1` are not interchangeable here, even though they reach the same process.
-> The browser treats them as different origins and scopes the session cookie accordingly, so if you
-> register the callback on `localhost` and then browse the app on `127.0.0.1`, the cookie set just
-> before the redirect is not sent back on the way in. The sign-in then fails in a way that looks
-> like a lost session rather than a mismatched host.
+> `localhost` and `127.0.0.1` are not interchangeable. The browser treats them as different origins
+> and scopes the session cookie accordingly. If you register the callback on `localhost` and browse
+> on `127.0.0.1`, the cookie set before the redirect is not sent back, and the sign-in fails.
 
 If you prefer the command line, the registration is one command:
 
@@ -218,17 +191,14 @@ az ad app create --display-name "my-agent-web-signin" \
 1. In the same registration, go to **Certificates & secrets**.
 2. On the **Client secrets** tab, select **New client secret**.
 3. Give it a description and pick an expiry.
-4. Select **Add**, then **copy the Value immediately**.
+4. Select **Add**, then **copy the Value immediately**. It is shown once.
 
-The value is shown once. Navigate away and it is gone forever, and you will have to create another
-one. Store it where the repository cannot reach it, which on .NET means `dotnet user-secrets`, never
-`appsettings.json`.
+Store it in `dotnet user-secrets`, not `appsettings.json`.
 
-While you are in the registration, have a look at **API permissions**. A new registration usually
-arrives with **Microsoft Graph** and `User.Read` and nothing else, which is fine: the identity
-libraries add the OIDC scopes to the request themselves, and the sample never calls Graph. There is
-nothing to add here yet and nothing that needs an administrator. You will come back to this blade
-once, in Exercise 3, to point this registration at the agent's blueprint.
+While you are in the registration, check **API permissions**. A new registration arrives with
+**Microsoft Graph** `User.Read`, which is sufficient. The identity libraries add the OIDC scopes
+automatically. You will come back to this blade in Exercise 3 to point this registration at the
+agent's blueprint.
 
 ### Step 3: Fill in the sign-in settings
 
@@ -250,42 +220,35 @@ tenant-specific values left blank:
 }
 ```
 
-Fill in `TenantId` and `ClientId` from the **Overview** blade in Step 1, and leave
-`AgentBlueprintId` alone. Leaving it blank now is the correct thing to do rather than an omission
-you will be fixing later. Leave `ClientSecret` empty in the file too, because the file is committed,
-and put the secret where it belongs:
+Fill in `TenantId` and `ClientId` from the **Overview** blade in Step 1. Leave `AgentBlueprintId`
+blank for now; it gets its value in Exercise 3. Leave `ClientSecret` empty in the file (it is
+committed) and store the secret separately:
 
 ```bash
 dotnet user-secrets set "AzureAd:ClientSecret" "<sign-in client secret>"
 ```
 
-`CallbackPath` has to line up with the redirect URI you registered, because `Microsoft.Identity.Web`
-builds the callback address from the app's own base URL plus this path. If the two disagree you get
-the `AADSTS50011` warned about above.
+`CallbackPath` must match the redirect URI you registered. `Microsoft.Identity.Web` builds the
+callback address from the app's base URL plus this path. A mismatch produces the `AADSTS50011`
+described above.
 
-The empty `Agent365Observability` section is the one Exercise 3 comes back to. It is named the way
-it is because that is the section the Agent 365 tooling and instrumentation look in, so filling it
-in later puts the blueprint id in the one place everything already expects to find it.
+The `Agent365Observability` section is where the Agent 365 tooling and instrumentation look for the
+blueprint id. Exercise 3 fills it in.
 
-That blueprint id matters more than its one line suggests, because the scope is built from it. The
-scope is `api://<blueprint-id>/access_agent_as_user`, it has to be byte for byte identical in the
-sign-in request, in the token acquisition, and in anything you paste into a debugger later, and a
-typo in any copy of it produces a token with the wrong audience rather than an error you can read.
-That is why the sample derives it in exactly one place from the blueprint id rather than letting you
-write the string out by hand.
+The scope `api://<blueprint-id>/access_agent_as_user` is built from the blueprint id. It must be
+identical in the sign-in request, the token acquisition, and any debugging tool. The sample derives
+it in one place from the blueprint id to avoid mismatches.
 
 ### Step 4: See how the app decides whether to sign anybody in
 
-The app reads its configuration at startup and asks one question: is every required sign-in value
-present? If anything is missing it skips the whole authentication pipeline and behaves exactly as it
-did in Exercise 1. If everything is there, it wires it up. This is the same pattern as the Azure
-OpenAI key switch from Exercise 1, Step 2: presence of configuration is the switch, and there is no
-separate flag to forget to flip.
+The app reads its configuration at startup and checks whether every required sign-in value is
+present. If anything is missing, it skips the authentication pipeline and behaves as it did in
+Exercise 1. This is the same pattern as the Azure OpenAI key switch from Exercise 1, Step 2:
+presence of configuration is the switch.
 
-The decision lives in `Agent365SignInOptions.FromConfiguration`, which also treats obvious
-placeholders as not configured, anything with angle brackets, anything starting `your-`, an
-all-zeroes guid, so a half-edited `appsettings.json` keeps the anonymous behaviour rather than
-failing against Entra. `Program.cs` then branches on the result:
+The decision lives in `Agent365SignInOptions.FromConfiguration`, which treats obvious placeholders
+as not configured (anything with angle brackets, anything starting `your-`, an all-zeroes guid).
+`Program.cs` then branches on the result:
 
 ```csharp
 var entraSignIn = Agent365SignInOptions.FromConfiguration(builder.Configuration);
@@ -306,31 +269,27 @@ if (entraSignIn.IsEnabled)
 }
 ```
 
-If you restart the app now it will still report anonymous mode however carefully you filled Step 3
-in, because the blueprint id is one of the values it looks for and that one is still empty. That is
-expected. Exercise 3, Step 4 is where it changes.
+If you restart the app now it still reports anonymous mode, because the blueprint id is one of the
+required values and it is still empty. Exercise 3, Step 4 fills it in.
 
 ### Step 5: Read the sign-in code
 
-You now have an app that will sign users in and a rough idea of how it decides to. What is left is
-to read the code that actually does it, because in Exercise 4 you will call into it once per turn
-and it helps a great deal to know what is on the other side of that call.
+Read the code that performs the sign-in. Exercise 4 calls into it once per turn.
 
-The destination is a method that hands back an access token for the blueprint's scope, belonging to
-the person currently signed in. It is called `AcquireUserAssertionAsync`, and that token is the
-*user assertion*, the input to hop 2 of the token chain. Everything else here exists to produce it.
+The key method is `AcquireUserAssertionAsync`, which returns an access token for the blueprint's
+scope belonging to the signed-in user. That token is the *user assertion*, the input to hop 2 of the
+token chain.
 
-The middle line of that `AddAuthentication` block is the one that does the work you came for.
-`AddMicrosoftIdentityWebApp` on its own signs the user in and gives you an id token, which tells you
-who they are and nothing more. `EnableTokenAcquisitionToCallDownstreamApi` turns the sign-in into an
-authorization-code flow that also comes back with an *access* token for the scope you name, the
-blueprint's scope, and `AddInMemoryTokenCaches` is where that token is kept so you can ask for it
-again on every turn.
+In the `AddAuthentication` block:
+
+- `AddMicrosoftIdentityWebApp` signs the user in and produces an id token.
+- `EnableTokenAcquisitionToCallDownstreamApi` turns the sign-in into an authorization-code flow that
+  also acquires an *access* token for the blueprint's scope.
+- `AddInMemoryTokenCaches` stores the token for reuse on each turn.
 
 `AddMicrosoftIdentityUI`, together with `app.MapControllers()` further down, contributes the
-ready-made `/MicrosoftIdentity/Account/SignIn` and `SignOut` endpoints. Leave `MapControllers()` out
-and the redirect to the sign-in endpoint lands on a 404, which is a confusing way to discover that a
-controller is missing.
+`/MicrosoftIdentity/Account/SignIn` and `SignOut` endpoints. Without `MapControllers()`, the
+redirect to the sign-in endpoint returns a 404.
 
 The middleware is registered under the same condition, in the order the pipeline needs:
 
@@ -343,9 +302,8 @@ if (entraSignIn.IsEnabled)
 ```
 
 Requiring a user is then two changes. `Components/Routes.razor` switches to an `AuthorizeRouteView`
-when sign-in is on, falling back to the plain `RouteView` when it is not, because an
-`AuthorizeRouteView` in an app with no authentication services throws about a missing
-`AuthenticationStateProvider`:
+when sign-in is on, falling back to the plain `RouteView` when it is not. An `AuthorizeRouteView`
+in an app with no authentication services throws about a missing `AuthenticationStateProvider`:
 
 ```razor
 @if (SignInOptions.IsEnabled)
@@ -362,9 +320,9 @@ else
 }
 ```
 
-And `Components/RedirectToLogin.razor` sends an unauthenticated visitor to the sign-in endpoint. The
-`forceLoad: true` forces a full browser round trip to Entra, because Blazor's client-side router
-would otherwise try to handle the navigation itself and go nowhere:
+And `Components/RedirectToLogin.razor` sends an unauthenticated visitor to the sign-in endpoint.
+`forceLoad: true` forces a full browser round trip to Entra; without it, Blazor's client-side router
+tries to handle the navigation itself:
 
 ```csharp
 protected override void OnInitialized()
@@ -374,8 +332,7 @@ protected override void OnInitialized()
 }
 ```
 
-Finally, the part the token chain will call. `Components/Pages/Home.razor` exposes the assertion
-through a method whose name you will see again:
+Finally, `Components/Pages/Home.razor` exposes the assertion through `AcquireUserAssertionAsync`:
 
 ```csharp
 public async Task<string> AcquireUserAssertionAsync()
@@ -405,18 +362,18 @@ public async Task<string> AcquireUserAssertionAsync()
 }
 ```
 
-Because the token comes from the cache that `AddInMemoryTokenCaches` set up during sign-in, this
-call is normally silent, with no redirect and no prompt. The two `catch` blocks are there for the
-cases where it is not: `MsalUiRequiredException` when there is no usable cached token, and
-`MicrosoftIdentityWebChallengeUserException` when Entra wants something interactive, typically a
-conditional access policy demanding a fresh sign-in or a consent prompt that was never answered.
-Both are handed to the consent handler, which turns them into a redirect the user can complete
-rather than an exception that kills the turn.
+The token comes from the cache that `AddInMemoryTokenCaches` set up during sign-in, so this call is
+normally silent. The two `catch` blocks handle:
 
-The services are resolved from `IServiceProvider` rather than injected with `@inject`, which is
-needed because `ITokenAcquisition` only exists in the container when sign-in is enabled, and an
-`@inject` directive would fail at render time in anonymous mode, before any of the conditionals get
-a chance to run.
+- `MsalUiRequiredException`: no usable cached token.
+- `MicrosoftIdentityWebChallengeUserException`: Entra requires interactive input (for example, a
+  conditional access policy or an unanswered consent prompt).
+
+Both are handed to the consent handler, which turns them into a redirect the user can complete.
+
+The services are resolved from `IServiceProvider` (not injected with `@inject`) because
+`ITokenAcquisition` only exists in the container when sign-in is enabled. An `@inject` directive
+would fail at render time in anonymous mode.
 
 > ✅ **Checkpoint.** The sign-in client is registered, the app is pointed at it, and you have read
 > the code that will use it. The sign-in is still dormant, because the scope it asks for is built
@@ -426,16 +383,13 @@ a chance to run.
 
 ## Exercise 3: Register the agent with Agent 365
 
-Now the agent stops being code on your laptop and becomes an object in your tenant. Two objects,
-actually, and the difference between them matters for everything that follows:
+This exercise creates two objects in your tenant:
 
-- The **blueprint** is the parent app registration. It holds the permissions and it owns the agent.
-  Think of it as the definition of the agent.
-- The **agent identity** is a child principal of that blueprint. It is the thing that actually
-  *acts*, and it is the principal your telemetry is attributed to.
+- The **blueprint**: the parent app registration. It holds the permissions and defines the agent.
+- The **agent identity**: a child principal of the blueprint. It is the principal that acts, and that
+  telemetry is attributed to.
 
-The exercise ends by going back to the sign-in from Exercise 2 and giving it the piece it was
-missing.
+The exercise ends by giving the sign-in from Exercise 2 the blueprint id it was missing.
 
 ### Step 1: Run the setup skill
 
@@ -449,8 +403,7 @@ not a Teams agent and not an AI Teammate. Use the OBO auth mode.
 **What the skill does**
 
 The `a365-setup` skill runs first. It checks the prerequisites, offers to install anything missing,
-and confirms which Azure identity you are signed in as. Then it asks two questions, and these two
-answers determine everything that follows:
+and confirms which Azure identity you are signed in as. It asks two questions:
 
 | Question | Your answer for this lab | Why |
 | --- | --- | --- |
@@ -462,20 +415,19 @@ registration.
 
 **Behind the scenes**
 
-Whatever the skill says, this is what it comes down to:
-
 ```bash
 a365 setup all --agent-name "my-agent" --dry-run    # preview what will happen
 a365 setup all --agent-name "my-agent"              # actually do it
 ```
 
-Always run the dry run first and read the output. And do not worry about running the real command
-more than once, because `a365 setup all` is idempotent and safe to re-run after fixing a problem.
+Run the dry run first and read the output. `a365 setup all` is idempotent and safe to re-run.
 
-It creates an **agent blueprint** app registration together with a client secret, an **agent
-identity** as a child of that blueprint, the API permissions the agent needs including
-`Agent365.Observability.OtelWrite`, which is the one that lets it write telemetry, and a file called
-`a365.generated.config.json` holding all the generated identifiers.
+It creates:
+
+- An **agent blueprint** app registration with a client secret
+- An **agent identity** as a child of that blueprint
+- The API permissions the agent needs, including `Agent365.Observability.OtelWrite`
+- A file called `a365.generated.config.json` holding all the generated identifiers
 
 **How to verify**
 
@@ -483,23 +435,20 @@ Open `a365.generated.config.json` and confirm there is an `agentBlueprintId` and
 id in it. Then go to the [Entra admin center](https://entra.microsoft.com), open **App
 registrations**, and confirm the blueprint is listed.
 
-> ⚠️ If you are not a Global Administrator, read the summary the CLI printed carefully. It contains
-> a consent snippet for an administrator to run. Until somebody runs it the permissions exist but
-> are not granted, and Exercise 4 fails with a consent error that looks like a bug in your code.
-> This is the first of the two admin handoffs.
+> ⚠️ If you are not a Global Administrator, read the summary the CLI printed. It contains a consent
+> snippet for an administrator to run. Until consent is granted, the permissions exist but are not
+> effective, and Exercise 4 fails with a consent error. This is the first of two admin handoffs.
 
 ### Step 2: Store the blueprint secret somewhere safe
 
-`a365 setup all` generated a client secret for the blueprint. That secret is what proves, when you
-build the token chain in Exercise 4, that your code is allowed to act as this agent, so it must
-never end up in source control.
+`a365 setup all` generated a client secret for the blueprint. This secret proves, in the token chain
+(Exercise 4), that your code is allowed to act as this agent. Do not commit it to source control.
 
 ```bash
 dotnet user-secrets set "Agent365:BlueprintClientSecret" "<secret>"
 ```
 
-If you lose it you do not have to re-register anything. You can read it back on the same machine,
-signed in as the same user:
+If you lose it, you can read it back on the same machine, signed in as the same user:
 
 ```bash
 a365 setup blueprint --agent-name "my-agent" --show-secret
@@ -507,17 +456,14 @@ a365 setup blueprint --agent-name "my-agent" --show-secret
 
 ### Step 3: Give the sign-in app permission to call the blueprint
 
-Here is where the two halves meet. Exercise 2 left you with an app that can authenticate a user, and
-Step 1 gave you a blueprint. What you do not have yet is a token that links them, which is the whole
-point of the OBO path.
+Exercise 2 gave you an app that can authenticate a user. Step 1 gave you a blueprint. The missing
+piece is a token that links them.
 
-The obvious question is why the blueprint cannot sign users in itself, given that it is an app
-registration like any other. The reason is that a blueprint is an **agentic application**, and
-Microsoft Entra bars agentic applications from interactive `/authorize` flows. A blueprint can never
-present a sign-in page. That is precisely why Exercise 2 came first, and why what you registered
-there was a separate, completely ordinary application.
+A blueprint is an **agentic application**, and Microsoft Entra bars agentic applications from
+interactive `/authorize` flows. A blueprint cannot present a sign-in page, which is why Exercise 2
+registered a separate, ordinary application.
 
-So this lab has three identities in it, and keeping them straight makes everything else easier:
+This lab has three identities:
 
 | Identity | Who creates it | What it does |
 | --- | --- | --- |
@@ -536,17 +482,15 @@ Keep `a365.generated.config.json` open, because you need the **blueprint's app i
 7. Select **Add permissions**.
 8. Select **Grant admin consent for \<your tenant\>**.
 
-That last one genuinely needs an administrator, because `access_agent_as_user` is not a permission
-users can consent to for themselves. If the button is greyed out for you, this is the second admin
-handoff. A permission that is recorded but not consented to behaves exactly like one that was never
-added.
+That last step requires an administrator, because `access_agent_as_user` is not a permission users
+can consent to themselves. If the button is greyed out, this is the second admin handoff. A
+permission that is recorded but not consented to has no effect.
 
-> If the blueprint does not come up in the search, search by its app id rather than its display
-> name, because the CLI appends `" Blueprint"` to the name you chose and what you type may not
-> match. And if you find the API but it exposes no scopes at all, open the **blueprint's**
-> registration, go to **Expose an API** and then **Add a scope**, create a scope named exactly
-> `access_agent_as_user`, set **Who can consent?** to **Admins and users**, leave the state
-> **Enabled**, and come back here.
+> If the blueprint does not appear in the search, search by its app id. The CLI appends `" Blueprint"`
+> to the name you chose, so the display name may not match. If you find the API but it exposes no
+> scopes, open the **blueprint's** registration, go to **Expose an API**, select **Add a scope**,
+> create a scope named exactly `access_agent_as_user`, set **Who can consent?** to **Admins and
+> users**, leave the state **Enabled**, and return here.
 
 From the command line, the same two operations are:
 
@@ -558,18 +502,16 @@ az ad app permission add --id <sign-in client app id> \
 az ad app permission admin-consent --id <sign-in client app id>
 ```
 
-Note that `az ad app permission add` only records the permission. The consent grant on the second
-line is what makes it usable.
+`az ad app permission add` only records the permission. The consent grant on the second line is what
+makes it usable.
 
-> Do not mix up the two secrets. You now have a blueprint secret and a sign-in client secret, and
-> they do completely different jobs. The blueprint secret authenticates hop 1 of the token chain,
-> the sign-in client secret authenticates the web sign-in. Swapping them produces authentication
-> errors that are genuinely hard to read.
+> Do not mix up the two secrets. The blueprint secret authenticates hop 1 of the token chain; the
+> sign-in client secret authenticates the web sign-in. Swapping them produces authentication errors
+> that are difficult to diagnose.
 
 ### Step 4: Give the app the blueprint id
 
-This is the value you left blank in Exercise 2, and it is the one that switches the sign-in on. Take
-`agentBlueprintId` from `a365.generated.config.json` and put it in `appsettings.json`:
+Take `agentBlueprintId` from `a365.generated.config.json` and put it in `appsettings.json`:
 
 ```json
 "Agent365Observability": {
@@ -577,32 +519,30 @@ This is the value you left blank in Exercise 2, and it is the one that switches 
 }
 ```
 
-That single value does two things at once. It completes the set of settings the startup check looks
-for, so the authentication pipeline you read through in Exercise 2 finally gets registered, and it
-supplies the resource half of `api://<blueprint-id>/access_agent_as_user`, which is the scope the
-sign-in asks for.
+This value does two things:
 
-That scope is worth slowing down over, because an app can sign users in perfectly well and never ask
-for it. You would have a working login and a token that the next exercise rejects. The scope
-determines who the token is *addressed to*, and hop 2 of the token chain only accepts an assertion
-addressed to the blueprint. Not `User.Read`, and not the blueprint's `.default`.
+- It completes the set of settings the startup check requires, so the authentication pipeline from
+  Exercise 2 is registered.
+- It supplies the resource portion of the scope `api://<blueprint-id>/access_agent_as_user`.
+
+The scope determines who the token is *addressed to*. Hop 2 of the token chain only accepts an
+assertion addressed to the blueprint (not `User.Read` and not the blueprint's `.default`).
 
 Restart the app afterwards.
 
 ### Step 5: Verify the token you get back
 
-Open the app. You should now be redirected to Entra before the chat page renders at all, because
-`AuthorizeRouteView` refuses to show a protected page to an anonymous visitor. The first time on a
-tenant where an administrator has not already consented, you will be asked to approve the
-permissions.
+Open the app. You should be redirected to Entra before the chat page renders, because
+`AuthorizeRouteView` blocks anonymous visitors. On first use in a tenant without prior admin consent,
+you will be prompted to approve the permissions.
 
-Once you are back, look at the token the app is holding. Set a breakpoint on the
+Once signed in, verify the token. Set a breakpoint on the
 `return await tokenAcquisition.GetAccessTokenForUserAsync(...)` line in `Components/Pages/Home.razor`
-and reload the page. The first render probes for the token, so the breakpoint hits without you
-having to send a message. Copy the return value out of the debugger.
+and reload the page. The first render probes for the token, so the breakpoint hits without sending a
+message. Copy the return value.
 
-Paste it into [jwt.ms](https://jwt.ms), which decodes it in the browser without sending it anywhere,
-and check four claims:
+Paste it into [jwt.ms](https://jwt.ms) (decodes in the browser, sends nothing externally) and check
+four claims:
 
 | Claim | What it should say |
 | --- | --- |
@@ -611,12 +551,10 @@ and check four claims:
 | `oid` | The signed-in user's object id |
 | `tid` | Your tenant id |
 
-If `aud` is the sign-in client, or Microsoft Graph, the scope was not requested correctly. The usual
-cause is a blueprint id that is present but wrong, a stale one from an earlier `a365 setup all` run
-for example, which builds a scope pointing at a resource that is not your blueprint.
+If `aud` is the sign-in client or Microsoft Graph, the scope was not requested correctly. The usual
+cause is a stale or incorrect blueprint id that builds a scope pointing at a different resource.
 
-While you have the decoded token in front of you, make a note of the `oid` value. Exercise 4, Step 7
-comes back to it.
+Note the `oid` value. Exercise 4, Step 7 uses it.
 
 > ✅ **Checkpoint.** This is a good place to stop if you need to. The agent is registered and
 > governed, it shows up in your tenant, and users sign in to it with a token addressed to the
@@ -626,14 +564,12 @@ comes back to it.
 
 ## Exercise 4: Instrument the agent for observability
 
-This is the longest exercise and it delivers most of the value. By the end of it every turn the
-agent takes produces telemetry, attributed to the user who caused it, and visible in Defender,
-Purview and the Microsoft 365 admin center.
+This exercise adds telemetry to every turn, attributed to the signed-in user, and visible in
+Defender, Purview, and the Microsoft 365 admin center.
 
-It also has the most moving parts, so here is the shape of it before you start. You install the
-telemetry distro, wire it into the app's startup, obtain a token the exporter is allowed to use,
-make sure every turn carries the identity information the service partitions on, and finally wrap
-the turn in the specific span types Agent 365 accepts.
+The steps: install the telemetry distro, wire it into startup, obtain a token the exporter can use,
+attach identity baggage to every turn, and wrap the turn in the semantic span types Agent 365
+accepts.
 
 ### Step 1: Run the observability skill
 
@@ -659,22 +595,17 @@ Agent (Non AI Teammate) using the obo auth mode.
 | 5.5 | Adds the manual instrumentation scopes |
 | 6 to 8 | Updates configuration, builds, and smoke-tests the result |
 
-> Read the auth mode it reports back before letting it continue. For this lab `obo` is correct. It
-> is *not* correct for a Teams-hosted agent, and the skill has been known to choose it there anyway.
+> Verify the auth mode before continuing. For this lab `obo` is correct. It is *not* correct for a
+> Teams-hosted agent, and the skill has been known to choose it there anyway.
 
-> The skill instruments a signed-in app, it does not create the sign-in. Phase 5 above implements
-> the token resolver on the assumption that something upstream already hands it a user assertion.
-> That something is the sign-in you switched on in Exercise 3, so make sure Exercise 3, Step 5 is
-> done and verified before running this.
+> The skill instruments a signed-in app; it does not create the sign-in. Phase 5 implements the
+> token resolver on the assumption that something upstream already provides a user assertion.
+> Complete Exercise 3, Step 5 before running this.
 
-The rest of this exercise walks through what those changes actually are, in the order the skill
-makes them. **If you ran the skill, you do not need to perform these steps.** Read them as an
-explanation of the code you now have, and as a checklist if something is not working.
+The rest of this exercise walks through the changes. **If you ran the skill, you do not need to
+perform these steps.** Read them as a reference and as a checklist if something is not working.
 
 ### Step 2: Install the distro
-
-The Agent 365 telemetry support ships as an OpenTelemetry distro: a wrapper around standard OTel
-that adds the Agent 365 exporter and the span processing the service expects.
 
 ```bash
 dotnet add package Microsoft.OpenTelemetry
@@ -682,9 +613,8 @@ dotnet add package Microsoft.OpenTelemetry
 
 ### Step 3: Wire the exporter into the entry point
 
-Now initialise the distro when the app starts. In `Program.cs`, and note that this hangs off
-`builder` rather than `builder.Services`, because the distro configures the whole OpenTelemetry
-pipeline rather than registering one more service:
+Initialise the distro in `Program.cs`. This hangs off `builder` (not `builder.Services`), because
+the distro configures the whole OpenTelemetry pipeline:
 
 ```csharp
 using Microsoft.OpenTelemetry;
@@ -708,14 +638,12 @@ builder.UseMicrosoftOpenTelemetry(o =>
 });
 ```
 
-`o.Exporters` is a flags enum. During development set it to `Agent365 | Console` so that spans, as
-well as being sent to Agent 365, show up in the terminal, which makes troubleshooting far easier.
-`TokenResolver` is the hook the exporter calls when it needs a token, and it reads from a store that
-stays empty until Step 5 fills it, so nothing is expected to come out of it yet.
+`o.Exporters` is a flags enum. During development, set it to `Agent365 | Console` so spans also
+appear in the terminal. `TokenResolver` is the hook the exporter calls when it needs a token; it
+reads from a store that stays empty until Step 5 fills it.
 
-This gets spans out of the process, but the LLM calls only emit spans if the chat client is
-instrumented too, through a second `UseOpenTelemetry()` call. The sample builds the agent straight
-from the Azure OpenAI chat client, so slot the instrumentation in between the two:
+LLM calls only emit spans if the chat client is instrumented. The sample builds the agent from the
+Azure OpenAI chat client, so add the instrumentation between the two:
 
 ```csharp
 var instrumentedChatClient = azureClient.GetChatClient(aoaiDeployment)
@@ -731,20 +659,15 @@ return instrumentedChatClient.AsAIAgent(
     tools: learnMcpTools.Cast<AITool>().ToList());
 ```
 
-`UseFunctionInvocation()` intercepts tool calls so they surface as tool spans, and
-`UseOpenTelemetry()` emits the `chat` spans that `InvokeAgentScope` anchors as children in Step 8.
-`EnableSensitiveData` writes the prompts and completions into the span attributes, which is usually
-what you want for Defender, as long as you understand what you are recording.
+- `UseFunctionInvocation()` intercepts tool calls so they surface as tool spans.
+- `UseOpenTelemetry()` emits the `chat` spans that `InvokeAgentScope` anchors as children in Step 8.
+- `EnableSensitiveData` writes prompts and completions into span attributes.
 
 ### Step 4: Implement the two-hop token chain
 
-This is the most important part of the OBO path and the part most worth reading even if the skill
-wrote it for you.
-
-The exporter needs a token to talk to the Agent 365 Observability API, and it has to be a specific
-one: a token issued to the agent identity, acting on behalf of the signed-in user. A plain delegated
-user token is rejected, because its principal is the human rather than the agent. Getting the right
-token takes two hops.
+The exporter needs a token to post to the Agent 365 Observability API. It must be a token issued to
+the agent identity, acting on behalf of the signed-in user. A plain delegated user token is rejected
+because its principal is the human, not the agent. Getting the right token takes two hops.
 
 **Hop 1**: the blueprint proves that it owns the agent identity, and gets back an assertion.
 
@@ -760,10 +683,9 @@ var form = new Dictionary<string, string>
 // POST to https://login.microsoftonline.com/<tenant>/oauth2/v2.0/token
 ```
 
-The `fmi_path` parameter is what turns this from an ordinary client-credentials call into an agent
-flow. It effectively says: issue me an assertion I can use to act as this child identity. What comes
-back is not an access token and cannot be used as one. It is only usable as a client assertion in
-the second hop.
+The `fmi_path` parameter turns this from an ordinary client-credentials call into an agent flow: it
+requests an assertion for the specified child identity. The result is not an access token; it is only
+usable as a client assertion in the second hop.
 
 **Hop 2**: the agent identity exchanges the user's token for the one you actually want.
 
@@ -780,30 +702,23 @@ var form = new Dictionary<string, string>
 };
 ```
 
-Look at the two assertions side by side, because that pairing is the whole idea. `client_assertion`
-says which agent is asking, and `assertion` says who it is asking for. That second one is the user
-token you so carefully addressed to the blueprint in Exercise 3, and the app obtains it on every
-turn through `AcquireUserAssertionAsync()`. The result is a token that represents the agent acting
-for that specific person.
+The two assertions work together: `client_assertion` identifies which agent is asking, and
+`assertion` identifies the user it is asking for. That second value is the user token addressed to
+the blueprint (from Exercise 3), obtained on every turn through `AcquireUserAssertionAsync()`. The
+result is a token that represents the agent acting for that specific person.
 
-On .NET there is no shortcut for either hop, so the two form posts above are what you write.
-`HttpClient` with a `FormUrlEncodedContent` body is all it takes, and reading the JSON response for
-`access_token` and `expires_in` gives you everything you need to cache the result.
+On .NET, the two form posts use `HttpClient` with a `FormUrlEncodedContent` body. Read the JSON
+response for `access_token` and `expires_in` to cache the result.
 
-One practical point: **cache both hops, and refresh a few minutes before expiry**. A token that
-expires halfway through a turn disables the export with no visible error at all. The agent keeps
-answering and the telemetry quietly stops.
+**Cache both hops, and refresh a few minutes before expiry.** A token that expires mid-turn disables
+the export silently. The agent keeps answering but telemetry stops.
 
 ### Step 5: Bridge the token across to the exporter
 
-You have a token. Now the exporter has to be able to find it, and that is less trivial than it
-sounds.
-
-The exporter does not flush spans on the request thread but on a background loop, where there is no
-HTTP request, no signed-in user, and therefore nothing to exchange on behalf of. So the pattern is
-to acquire the token while you still have a user, park it somewhere both threads can see, and let
-the exporter read it from there. The store is a small dictionary keyed on the agent id and the
-tenant id, and its read method is the one you already handed to the distro in Step 3.
+The exporter flushes spans on a background loop, not on the request thread. There is no HTTP
+request, no signed-in user, and nothing to exchange on behalf of. Acquire the token while you still
+have a user, store it where both threads can see it, and let the exporter read it from the store.
+The store's read method is the one you handed to the distro in Step 3.
 
 ```csharp
 // On the request thread, once per turn:
@@ -812,18 +727,17 @@ var agentToken = await oboTokens.GetAgentTokenAsync(userAssertion, Observability
 observabilityTokenStore.Set(agentIdentityClientId, tenantId, agentToken);
 ```
 
-> Do not try to acquire the token inside the resolver itself. It is a tempting simplification and it
-> cannot work, because by the time the resolver runs there is no user left to act on behalf of.
+> Do not acquire the token inside the resolver itself. By the time the resolver runs, there is no
+> user context to act on behalf of.
 
 ### Step 6: Open a baggage scope around every turn
 
 Baggage is OpenTelemetry's mechanism for carrying contextual values alongside the current execution
-context, and Agent 365 uses it to carry the identity dimensions it partitions telemetry by: which
-tenant, which agent, which user, which conversation.
+context. Agent 365 uses it to carry the identity dimensions it partitions telemetry by: tenant,
+agent, user, and conversation.
 
-Spans emitted outside an active baggage scope are dropped, and the exporter tells you so with the
-message `Partitioned into 0 identity groups`. Everything looks like it is working and nothing
-arrives.
+Spans emitted outside an active baggage scope are dropped. The exporter reports
+`Partitioned into 0 identity groups`.
 
 ```csharp
 using var scope = new BaggageBuilder()
@@ -840,26 +754,23 @@ using var scope = new BaggageBuilder()
     .Build();
 ```
 
-Note the `using`: the scope stays open until the end of the enclosing block, so make sure the agent
-invocation happens inside that block. Opening the scope before the turn is not enough, it has to be
-open *for* the turn.
+The `using` keeps the scope open until the end of the enclosing block. The agent invocation must
+happen inside that block.
 
-`.AgentBlueprintId()` is worth calling out, because it populates `TargetAgentBlueprintId` in
-reporting, which is how the activity gets tied back to the blueprint you registered in Exercise 3.
+`.AgentBlueprintId()` populates `TargetAgentBlueprintId` in reporting, tying the activity to the
+blueprint registered in Exercise 3.
 
 ### Step 7: Resolve the caller correctly
 
-The Microsoft 365 admin center needs the caller's **directory object id** to show you who did what.
-Give it anything else and the export still returns `HTTP 200` and the row still arrives, it just
-never resolves to a person, and you get activity attributed to nobody.
+The Microsoft 365 admin center requires the caller's **directory object id** to display the user.
+Any other identifier still returns `HTTP 200` and the row still arrives, but it never resolves to a
+person.
 
-The object id is the `oid` claim, the one you noted down in Exercise 3, Step 5. The trap is that
-several other claims sit nearby and look like plausible identifiers without being one: `sub` is a
-pairwise identifier that differs per application, and the `nameidentifier` claim that some
-frameworks map `oid` onto can turn out to be a base64-looking hash instead.
+The object id is the `oid` claim noted in Exercise 3, Step 5. Other claims (`sub`, `nameidentifier`)
+look similar but are not the same: `sub` is pairwise per application, and `nameidentifier` can map
+to a base64 hash.
 
-Use the helper from `Microsoft.Identity.Web` rather than reaching for a raw claim, because it knows
-which of the several candidates is the real object id:
+Use the helper from `Microsoft.Identity.Web`:
 
 ```csharp
 using Microsoft.Identity.Web;
@@ -870,13 +781,11 @@ var userName  = user?.GetDisplayName() ?? "unknown";
 
 ### Step 8: Wrap the turn in the semantic scopes
 
-There is one more constraint to satisfy: Agent 365 does not accept arbitrary spans. It only ingests
-spans whose `gen_ai.operation.name` is one of `invoke_agent`, `chat`, `execute_tool` or
-`output_messages`. Anything else is dropped, span by span.
+Agent 365 only ingests spans whose `gen_ai.operation.name` is one of `invoke_agent`, `chat`,
+`execute_tool`, or `output_messages`. Other spans are dropped.
 
-The one that matters most is `invoke_agent`. Open an `InvokeAgentScope` at the start of every turn.
-It becomes the root span for that turn, and it is the only span the Microsoft 365 admin center
-ingests. Defender is happy to take everything, the admin center is not.
+Open an `InvokeAgentScope` at the start of every turn. It becomes the root span for that turn. The
+Microsoft 365 admin center only ingests `invoke_agent` spans; Defender ingests all accepted types.
 
 ```csharp
 var request = new Request(
@@ -892,32 +801,28 @@ using var invokeScope = InvokeAgentScope.Start(
     callerDetails);
 ```
 
-> The session, conversation and channel have to be on the request object, not only in baggage. This
-> trips people up because baggage *does* land on the span tags, so it looks like the information is
-> there. But the exported `invoke_agent` payload is built from the request object you pass to the
-> scope, so leaving them out exports a span that is accepted and yet shows no run context at all.
+> The session, conversation, and channel must be on the request object, not only in baggage.
+> Baggage values land on span tags, so the data appears to be present. However, the exported
+> `invoke_agent` payload is built from the request object. Omitting them from it produces a span
+> that is accepted but shows no run context.
 
-You do not need to add `chat` spans by hand on .NET. They come free from the auto-instrumentation
-you enabled with the `UseOpenTelemetry()` call in Step 3, and tool calls surface the same way thanks
-to `UseFunctionInvocation()`. If you find you are missing either, check that both calls are still in
-the chat client builder chain before reaching for `ExecuteToolScope` manually.
+You do not need to add `chat` spans manually on .NET. They come from the `UseOpenTelemetry()` call
+in Step 3, and tool calls surface from `UseFunctionInvocation()`. If either is missing, check that
+both calls are still in the chat client builder chain.
 
 ### Step 9: Verify that the telemetry is actually leaving
 
-Before going anywhere near Defender, confirm from the app's own logs that spans are being exported.
-Turn on the exporter's logging:
+Confirm from the app's own logs that spans are being exported. Turn on exporter logging:
 
 ```powershell
 $env:OTEL_LOG_LEVEL="INFO"
 $env:A365_OBSERVABILITY_LOG_LEVEL="debug"
 ```
 
-Both variables matter. `OTEL_LOG_LEVEL` controls the OpenTelemetry SDK's own diagnostics, while
-`A365_OBSERVABILITY_LOG_LEVEL` is what makes the Agent 365 components talk. Set only the first and
-you see the SDK start up and then apparent silence from the part you actually wanted to watch.
+Both variables matter. `OTEL_LOG_LEVEL` controls the OpenTelemetry SDK diagnostics;
+`A365_OBSERVABILITY_LOG_LEVEL` enables logging from the Agent 365 components.
 
-Ask the agent a question and read the output. There are four things to look for, and all four have
-to be right:
+Ask the agent a question and check the output for:
 
 - `Partitioned into 1 identity groups`, **not 0**. Zero means the baggage scope is not active around
   the turn, so go back to Step 6.
@@ -933,9 +838,9 @@ to be right:
 
 ## Exercise 5: Give the agent access to Microsoft 365 data
 
-With observability in place you can give the agent access to Microsoft 365 data, Mail, Calendar and
-more, through the Work IQ MCP servers. It reaches that data using the signed-in user's own
-permissions, so the agent can never see anything the person driving it could not already see.
+With observability in place, give the agent access to Microsoft 365 data (Mail, Calendar, and more)
+through the Work IQ MCP servers. The agent reaches this data using the signed-in user's own
+permissions.
 
 ### Step 1: Run the Work IQ skill
 
@@ -947,9 +852,9 @@ Add Work IQ tools to this agent. I want Mail and Calendar.
 
 **What the skill does**
 
-`add-workiq-tools` shows you the catalog of available servers, adds the ones you pick, writes a
-`ToolingManifest.json` describing them, wires a registration service into your agent code, and walks
-you through the permissions handoff that each server needs.
+`add-workiq-tools` shows the catalog of available servers, adds the selected ones, writes a
+`ToolingManifest.json`, wires a registration service into your agent code, and walks you through
+the permissions each server needs.
 
 **Behind the scenes**
 
@@ -960,9 +865,8 @@ a365 develop add-mcp-servers --servers mail,calendar # add the ones you want
 
 **How to verify**
 
-Open `ToolingManifest.json` and check that the servers you asked for are listed, and that each
-appears **exactly once**, because duplicate registrations are a known failure mode. Then ask the
-agent something that can only be answered by calling one of them:
+Open `ToolingManifest.json` and verify that each requested server appears **exactly once** (duplicate
+registrations are a known failure mode). Then test:
 
 ```text
 What's on my calendar tomorrow?
@@ -974,21 +878,18 @@ What's on my calendar tomorrow?
 
 ## Exercise 6: Verify it end to end
 
-Everything so far proves the agent *emits* telemetry. This exercise proves it *arrives*, which is
-not the same thing at all. As you have seen, there are several ways for a span to be accepted and
-then quietly discarded.
+This exercise confirms that telemetry arrives in the portals. The export returning `HTTP 200` does
+not guarantee delivery; there are several ways for a span to be accepted and then discarded.
 
 ### Step 1: Produce some activity
 
-Ask the agent three or four questions. There is a set of them in
-[sample prompts](./99-sample-prompts.md) if you want a starting point. Make sure at least one causes
-a tool call, so you have more than inference spans to look at.
+Ask the agent three or four questions. Use the [sample prompts](./99-sample-prompts.md) if needed.
+Include at least one question that causes a tool call.
 
 ### Step 2: Check Microsoft Defender
 
 Go to [Advanced hunting](https://security.microsoft.com) in the Defender portal and query the
-`CloudAppEvents` table. Defender accepts every operation type, so this is where you see the fullest
-picture:
+`CloudAppEvents` table. Allow about five minutes for indexing.
 
 ```kusto
 CloudAppEvents
@@ -997,17 +898,13 @@ CloudAppEvents
 | order by Timestamp desc
 ```
 
-Defender has to index the events, so give it around five minutes before concluding something is
-wrong.
-
 ### Step 3: Check the Microsoft 365 admin center
 
-Now go to [admin.cloud.microsoft](https://admin.cloud.microsoft), find your agent in the inventory,
+Go to [admin.cloud.microsoft](https://admin.cloud.microsoft), find your agent in the inventory,
 and open its activity.
 
-This surface behaves differently from Defender, and understanding how saves a lot of debugging: the
-admin center ingests `invoke_agent` rows only, and it reads the caller identity off that one span.
-Which means the combination of what you see in each portal tells you precisely where a problem is:
+The admin center ingests `invoke_agent` rows only and reads the caller identity from that span. The
+combination of what each portal shows tells you where a problem is:
 
 | What you see | Where the problem is |
 | --- | --- |
@@ -1018,19 +915,16 @@ Which means the combination of what you see in each portal tells you precisely w
 
 ### Step 4: Optional, let a skill check the code for you
 
-There is a skill that reviews the instrumentation and reports what is wrong without changing
-anything:
-
 ```text
 Validate the Agent 365 observability code in this project.
 ```
 
-`a365-code-validator` checks that the exporter is actually activated, that the runtime agent identity
-is bound correctly, that the required spans are present, and that the token has the right shape for
-the endpoint you are posting to. It is read-only by default, so it is safe to run at any point.
+`a365-code-validator` checks that the exporter is activated, the runtime agent identity is bound
+correctly, the required spans are present, and the token has the right shape for the endpoint. It is
+read-only and safe to run at any point.
 
-> ✅ **Checkpoint.** You have produced activity, found it in both portals, and you know how to read
-> the difference between them when something is missing.
+> ✅ **Checkpoint.** You have produced activity, found it in both portals, and confirmed how the
+> two portals differ when something is missing.
 
 ---
 
@@ -1045,46 +939,37 @@ the endpoint you are posting to. It is read-only by default, so it is safe to ru
 | `AADSTS50011` redirect URI mismatch | The registered redirect URI does not match the address the browser is on, scheme included. Exercise 2, Step 1 |
 | Hop 2 rejects the assertion | The sign-in asked for the wrong scope, so the user token is not addressed to the blueprint. Exercise 3, Step 5 |
 | The app starts in anonymous mode with a filled-in `appsettings.json` | A required value is still blank or still a placeholder, and the blueprint id is the usual one. Exercise 3, Step 4 |
-| Sign-in loops back to the sign-in page | The browser is on `127.0.0.1` and the app set its cookie on `localhost`, or the other way round. Exercise 2, Step 1 |
-| `MsalUiRequiredException` on the first turn after a restart | The auth cookie is encrypted at rest and survives the restart, the in-memory token cache does not. Sign out and back in, or handle it the way Exercise 2, Step 5 does |
+| Sign-in loops back to the sign-in page | The browser is on `127.0.0.1` and the cookie was set on `localhost`, or vice versa. Exercise 2, Step 1 |
+| `MsalUiRequiredException` on the first turn after a restart | The auth cookie survives the restart but the in-memory token cache does not. Sign out and back in, or handle it as in Exercise 2, Step 5 |
 | No `chat` spans | The `UseOpenTelemetry()` call is missing from the chat client builder chain. Exercise 4, Step 3 |
 
 ## Completion
 
-Congratulations, you have completed **Lab A365-01A**. You started with an ordinary web agent that
-answered questions for anyone who opened the page and knew nothing about the tenant it ran in, and
-along the way you learned:
+You have completed **Lab A365-01A**. You started with an ordinary web agent and onboarded it to
+Agent 365. Along the way you covered:
 
-✅ **Identity separation**: why an agent needs three identities, a sign-in client, a blueprint and an
-agent identity, and why a blueprint can never sign users in.
+✅ **Identity separation**: three identities (sign-in client, blueprint, agent identity) and why a
+blueprint cannot sign users in.
 
-✅ **Registration**: how `a365 setup all` creates the blueprint and the agent identity, and what the
-generated configuration contains.
+✅ **Registration**: `a365 setup all` creates the blueprint and agent identity.
 
-✅ **The right token**: how to make the sign-in ask for `api://<blueprint-id>/access_agent_as_user`,
-and how to prove you got what you asked for by reading the claims.
+✅ **The right token**: the sign-in requests `api://<blueprint-id>/access_agent_as_user` and the
+claims confirm the audience.
 
-✅ **The two-hop chain**: how `fmi_path` turns a client-credentials call into an agent flow, and how
-pairing a client assertion with a user assertion produces a token that means "this agent, for this
-person".
+✅ **The two-hop chain**: `fmi_path` turns a client-credentials call into an agent flow; pairing a
+client assertion with a user assertion produces a token meaning "this agent, for this person".
 
-✅ **Observability**: how to wire the A365 exporter into a Blazor Server app, bridge a per-request
-token to a background flush thread, and open the baggage scope that keeps your spans from being
-silently dropped.
+✅ **Observability**: the A365 exporter wired into a Blazor Server app, a per-request token bridged
+to a background flush thread, and a baggage scope that keeps spans from being dropped.
 
-✅ **Semantic spans**: which four operation names Agent 365 accepts, why `invoke_agent` is the one
-the admin center cares about, and why the caller has to be a directory object id.
+✅ **Semantic spans**: the four accepted operation names, why `invoke_agent` is required for the
+admin center, and why the caller must be a directory object id.
 
-✅ **Microsoft 365 data**: how to add Work IQ MCP servers so the agent can read mail and calendar
-under the signed-in user's own permissions.
+✅ **Microsoft 365 data**: Work IQ MCP servers providing mail and calendar access under the
+signed-in user's permissions.
 
-✅ **Verification**: how to read the exporter's own logs, and how the difference between what
-Defender shows and what the admin center shows tells you where a problem is.
-
-What is worth taking away is that none of this changed what the agent *does*. It answers exactly the
-same questions it answered in Exercise 1. What changed is that the organization can now see it,
-govern it, and hold it accountable, which is the difference between a demo and something you can put
-in front of users.
+✅ **Verification**: reading the exporter's logs, and interpreting the difference between Defender
+and admin center results.
 
 ### Related resources
 
