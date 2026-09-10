@@ -6,7 +6,7 @@ Some evidence is immediate, such as a Copilot Studio Preview activity trace. Ten
 
 ## Path 1: Copilot Studio agent with the GitHub Copilot runtime harness
 
-These prompts are for [Lab A365-02](./02-copilot-studio.md). Run them in Preview, then in the published Teams agent. Record the time of each test.
+These prompts are for [Lab A365-01](./01-copilot-studio.md). Run them in Preview, then optionally in the published Teams agent if you have published it separately. Record the time of each test.
 
 ### Category 1: Microsoft Learn lookups in Preview
 
@@ -20,9 +20,9 @@ These prompts are for [Lab A365-02](./02-copilot-studio.md). Run them in Preview
 
 > A citation by itself is not sufficient. Do not mark the step complete unless the trace shows the tool invocation.
 
-### Category 2: Published runs in Teams
+### Category 2: Optional published runs in Teams
 
-Run these from a **published Teams conversation** in the same tenant, and record the time, signed-in user, and channel.
+If you have published the agent separately, run these from a **published Teams conversation** in the same tenant and record the time, signed-in user, and channel.
 
 | # | Prompt | Expected output |
 | --- | --- | --- |
@@ -120,7 +120,7 @@ Only after you have completed the Work IQ exercise, and only on stacks that have
 | Follow up instead of restating | "and for a Linux app service?" keeps the conversation id stable |
 | Ask for sources | "and link the Learn article", which makes the grounding visible |
 
-The A365-02 prompts name the skill to encourage its use during testing. Normal Microsoft documentation questions can also activate it.
+The A365-01 prompts name the skill to encourage its use during testing. Normal Microsoft documentation questions can also activate it.
 
 ## What the agent will not do
 

@@ -1,4 +1,4 @@
-# Lab A365-01A - Web App Agent with User OBO (.NET)
+# Lab A365-02A - Web App Agent with User OBO (.NET)
 
 > **Stack**: .NET 8, Microsoft Agent Framework, Blazor Server **Duration**: around 3 hours **Level**: Intermediate
 
@@ -787,7 +787,7 @@ Validate the Agent 365 observability code in this project.
 
 ## Completion
 
-You have completed **Lab A365-01A**. You started with an ordinary web agent and onboarded it to Agent 365. Along the way you covered:
+You have completed **Lab A365-02A**. You started with an ordinary web agent and onboarded it to Agent 365. Along the way you covered:
 
 ✅ **Identity separation**: three identities (sign-in client, blueprint, agent identity) and why a blueprint cannot sign users in.
 
@@ -810,8 +810,8 @@ You have completed **Lab A365-01A**. You started with an ordinary web agent and 
 | Resource | Link |
 | --- | --- |
 | Sample prompts | [99-sample-prompts.md](./99-sample-prompts.md) |
-| The same lab in Python | [01b-web-obo-python.md](./01b-web-obo-python.md) |
-| The same lab in Node.js | [01c-web-obo-nodejs.md](./01c-web-obo-nodejs.md) |
+| The same lab in Python | [02b-web-obo-python.md](./02b-web-obo-python.md) |
+| The same lab in Node.js | [02c-web-obo-nodejs.md](./02c-web-obo-nodejs.md) |
 | Agent on-behalf-of OAuth flow | https://learn.microsoft.com/entra/agent-id/agent-on-behalf-of-oauth-flow |
 | Agent 365 observability concepts | https://learn.microsoft.com/microsoft-agent-365/developer/observability-concepts |
 | Agent 365 Skills | https://github.com/microsoft/agent365-skills |

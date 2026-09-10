@@ -54,11 +54,11 @@ nav:
   - Home: 'index.md'
   - Labs:
     - 'Path 1 - Copilot Studio':
-      - 'Lab A365-02 - New experience in Copilot Studio': '02-copilot-studio.md'
+      - 'Lab A365-01 - New experience in Copilot Studio': '01-copilot-studio.md'
     - 'Path 2 - Agent 365 SDK / web app user OBO':
       - 'SDK prerequisites': '00-prerequisites.md'
-      - 'Lab A365-01A - .NET on Blazor Server': '01a-web-obo-dotnet.md'
-      - 'Lab A365-01B - Python on FastAPI': '01b-web-obo-python.md'
-      - 'Lab A365-01C - Node.js on Express': '01c-web-obo-nodejs.md'
+      - 'Lab A365-02A - .NET on Blazor Server': '02a-web-obo-dotnet.md'
+      - 'Lab A365-02B - Python on FastAPI': '02b-web-obo-python.md'
+      - 'Lab A365-02C - Node.js on Express': '02c-web-obo-nodejs.md'
   - Reference:
     - Sample prompts: '99-sample-prompts.md'
