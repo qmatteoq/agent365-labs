@@ -59,5 +59,7 @@ nav:
       - 'Lab A365-01A - .NET on Blazor Server': '01a-web-obo-dotnet.md'
       - 'Lab A365-01B - Python on FastAPI': '01b-web-obo-python.md'
       - 'Lab A365-01C - Node.js on Express': '01c-web-obo-nodejs.md'
+    - 'Path 2 - Copilot Studio runtime harness':
+      - 'Lab A365-02 - New experience in Copilot Studio': '02-copilot-studio.md'
   - Reference:
     - Sample prompts: '99-sample-prompts.md'

@@ -1,13 +1,21 @@
 # Prerequisites
 
-Every lab in this repository requires the same three things: tools on your machine, licences in your tenant, and permissions on your account.
+This page is for **Path 1**, the custom web-app labs:
+
+- [Lab A365-01A: .NET](./01a-web-obo-dotnet.md)
+- [Lab A365-01B: Python](./01b-web-obo-python.md)
+- [Lab A365-01C: Node.js](./01c-web-obo-nodejs.md)
+
+If you are taking the browser-first Copilot Studio runtime-harness path, use the self-contained prerequisites in [Lab A365-02](./02-copilot-studio.md#prerequisites) instead.
+
+Every **Path 1** lab in this repository requires the same three things: tools on your machine, licences in your tenant, and permissions on your account.
 
 ## The tools you need on your machine
 
 | Requirement | Minimum | Check it with | What needs it |
 | --- | --- | --- | --- |
 | .NET SDK | 8.0 | `dotnet --version` | The Agent 365 CLI itself, and .NET agents |
-| Agent 365 CLI | latest | `a365 --version` | Every exercise |
+| Agent 365 CLI | latest | `a365 --version` | Every Path 1 lab |
 | PowerShell | 7.0 | `pwsh --version` | The consent scripts |
 | Azure CLI | latest | `az version` | Signing in to the tenant |
 | Az PowerShell module | latest | `Get-Module -ListAvailable Az.Accounts` | Granting permissions |
@@ -16,7 +24,7 @@ Every lab in this repository requires the same three things: tools on your machi
 | uv | latest | `uv --version` | The Python lab only |
 | Node.js | 20.10 | `node --version` | The Node.js lab only |
 
-> The .NET 8 SDK is required even if your agent is written in Python or TypeScript. The Agent 365 CLI is distributed as a .NET global tool, so .NET must be installed to run it. This is unrelated to the language your agent is written in.
+> The .NET 8 SDK is required even if your agent is written in Python or TypeScript. The Agent 365 CLI is distributed as a .NET global tool, so .NET must be installed to run it. This is unrelated to the language your agent is written in. This requirement is for **Path 1** only; Lab A365-02 does not use the CLI.
 
 A key requirement for the labs is the Agent 365 CLI, which you can install with the following command:
 
@@ -27,9 +35,9 @@ a365 --version
 
 The second command prints the installed version.
 
-## Installing the Agent 365 Skills
+## Installing the Agent 365 Skills for Path 1
 
-Most of the Agent 365 work in these labs is done by asking an AI coding assistant to do it, using the [Agent 365 Skills](https://github.com/microsoft/agent365-skills). The skills work with every major assistant, and each one installs them differently. Pick the row that matches the tool you use:
+Most of the Agent 365 work in the **Path 1** labs is done by asking an AI coding assistant to do it, using the [Agent 365 Skills](https://github.com/microsoft/agent365-skills). The skills work with every major assistant, and each one installs them differently. Pick the row that matches the tool you use:
 
 | Your assistant | How to install |
 | --- | --- |
@@ -39,7 +47,9 @@ Most of the Agent 365 work in these labs is done by asking an AI coding assistan
 
 Run the install from **your agent's project folder**, so the skills can see the code they are meant to change.
 
-## The licences your tenant needs
+> Lab A365-02 does not use these coding-assistant skills. It uses a **native Copilot Studio runtime skill** uploaded as a `SKILL.md` file inside the browser authoring experience.
+
+## The licences your tenant needs for Path 1
 
 | Requirement | What to know |
 | --- | --- |
@@ -49,7 +59,7 @@ Run the install from **your agent's project folder**, so the skills can see the 
 
 > If nobody in the tenant holds an Agent 365 licence, telemetry is accepted with `HTTP 200` and then discarded. The logs report a successful export, Defender shows no data, and no error is raised. Verify the licence before you start.
 
-## The permissions you need on your account
+## The permissions you need on your account for Path 1
 
 | Permission | Who needs it | What it is for |
 | --- | --- | --- |
@@ -61,9 +71,9 @@ Run the install from **your agent's project folder**, so the skills can see the 
 
 The web on-behalf-of labs contain two of these handoffs: one when the agent is registered, and one when the sign-in app is given permission to call the agent's blueprint. Each takes an administrator about a minute.
 
-## Getting the sample agent
+## Getting the sample agent for Path 1
 
-The labs start from a research assistant that answers questions about Microsoft products by searching the Microsoft Learn MCP server. Clone the runbook repository and work in the folder that matches your stack:
+The Path 1 labs start from a research assistant that answers questions about Microsoft products by searching the Microsoft Learn MCP server. Clone the runbook repository and work in the folder that matches your stack:
 
 ```bash
 git clone https://github.com/qmatteoq/agent365-runbook
@@ -76,9 +86,9 @@ cd agent365-runbook/01-scenarios/Web-App-Agent-User-OBO/0.Resources/Starting-poi
 | A365-01B (Python) | `python/` |
 | A365-01C (Node.js) | `nodejs/` |
 
-You can bring your own agent instead. The labs assume two things about it: it runs as a web app with one HTTP request per turn, and there is a single place in the code where a turn begins and ends, which is where the instrumentation goes.
+You can bring your own agent instead. The Path 1 labs assume two things about it: it runs as a web app with one HTTP request per turn, and there is a single place in the code where a turn begins and ends, which is where the instrumentation goes.
 
-## An Azure OpenAI resource
+## An Azure OpenAI resource for Path 1
 
 The agent reasons with a model deployed in Azure OpenAI, so you need a resource with a chat deployment on it. Note down two values from the Azure portal, on the resource:
 
@@ -94,3 +104,5 @@ Once all four sections check out, open the lab for your stack:
 - [Lab A365-01A: .NET](./01a-web-obo-dotnet.md)
 - [Lab A365-01B: Python](./01b-web-obo-python.md)
 - [Lab A365-01C: Node.js](./01c-web-obo-nodejs.md)
+
+If you are taking the browser-first Copilot Studio runtime-harness path instead, open [Lab A365-02](./02-copilot-studio.md).

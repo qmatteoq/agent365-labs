@@ -2,16 +2,11 @@
 
 📖 **Read the labs at [qmatteoq.github.io/agent365-labs](https://qmatteoq.github.io/agent365-labs)**
 
-Hands-on labs that take a working agent and onboard it into [**Microsoft Agent 365**](https://learn.microsoft.com/microsoft-agent-365/), so the organization it runs in can see it, govern it, and hold it accountable.
+Hands-on labs for [**Microsoft Agent 365**](https://learn.microsoft.com/microsoft-agent-365/). Register and instrument a custom web agent, or build a Copilot Studio agent and use its built-in observability.
 
-You start from an agent that contains no Agent 365 code and finish with one that:
+Both paths use a Microsoft documentation research assistant. You follow its tool calls and inspect the resulting activity in Microsoft Defender and the Microsoft 365 admin center.
 
-- Has an identity in your Microsoft Entra tenant and appears in the tenant inventory
-- Reports every turn to **Microsoft Defender**, **Microsoft Purview**, and the **Microsoft 365 admin center**
-- Attributes its activity to the signed-in user, with that user's permissions
-- Reaches Microsoft 365 data through the Work IQ MCP servers, on the .NET and Node.js stacks
-
-Each lab is designed to be completed in a single sitting, with a terminal on one side and a browser on the other.
+Each lab is designed to be completed in a single sitting. Path 1 uses a terminal and a browser; Path 2 stays in browser surfaces.
 
 ## Labs
 
@@ -29,9 +24,19 @@ Pick the stack you are most comfortable debugging in. The three labs reach the s
 
 > Work IQ is not yet available for Python with LangChain. Lab A365-01B covers Exercise 5 as an explanation of the gap instead of an implementation. Choose .NET or Node.js to build the Microsoft 365 data access end to end.
 
+### Path 2: Copilot Studio agent with the GitHub Copilot runtime harness
+
+Create an agent in Copilot Studio using the GitHub Copilot harness. Add the Microsoft Learn MCP server and a native skill, then publish to Teams and inspect its activity. Copilot Studio emits the telemetry automatically; you do not add instrumentation.
+
+This lab has its own tenant and Defender prerequisites. It also explains the current uncertainty about Copilot Studio coverage in the admin-center Activity view.
+
+| Lab | Runtime and authoring surface | Duration | Level |
+| --- | --- | --- | --- |
+| [A365-02](./docs/02-copilot-studio.md) | Copilot Studio new experience with the GitHub Copilot runtime harness | ~60-90 minutes, plus admin prework and indexing | Beginner to intermediate |
+
 ## What the labs cover
 
-All three labs follow the same six exercises:
+Path 1, the custom web-app path, follows the same six exercises across all three stacks:
 
 | # | Exercise | What you have at the end |
 | --- | --- | --- |
@@ -42,47 +47,56 @@ All three labs follow the same six exercises:
 | 5 | Give the agent access to Microsoft 365 data | Mail, Calendar and more through the Work IQ MCP servers, as the signed-in user |
 | 6 | Verify it end to end | Activity confirmed in Microsoft Defender and the Microsoft 365 admin center |
 
+Path 2, the Copilot Studio runtime-harness path, follows its own six browser exercises:
+
+| # | Exercise | What you have at the end |
+| --- | --- | --- |
+| 1 | Create the agent in the new experience | A Copilot Studio agent in the GitHub Copilot runtime harness, with a recorded environment id and bot id |
+| 2 | Add a real MCP tool and a native runtime skill | A Microsoft Learn MCP server connection and an uploaded `learn-research` skill |
+| 3 | Prove tool use in Preview | An activity trace showing a real `microsoft_docs_search` call |
+| 4 | Publish and test in Teams | Authenticated runs in the same tenant, suitable for tenant telemetry checks |
+| 5 | Check activity in the Microsoft 365 admin center | Activity for the test period, or an incomplete checkpoint with the missing evidence recorded |
+| 6 | Hunt the traces in Defender | Matching invocation and Microsoft Learn tool events for the published conversation |
+
 ## Before you start
 
-Every lab shares the same tooling, licensing, and permission requirements, collected in one place:
+The prerequisites are **path-specific**:
 
-**[Prerequisites](./docs/00-prerequisites.md)**
-
-In summary, you need:
+| Path | Start here |
+| --- | --- |
+| **Path 1 - custom web app** | [Prerequisites](./docs/00-prerequisites.md) |
+| **Path 2 - Copilot Studio runtime harness** | [Lab A365-02 prerequisites](./docs/02-copilot-studio.md#prerequisites) |
 
 | | |
 | --- | --- |
-| **Tools** | .NET 8 SDK, Agent 365 CLI, PowerShell 7, Azure CLI, Az PowerShell module, Git, plus the runtime for your chosen stack |
-| **Tenant** | A Microsoft 365 tenant with Agent 365 enabled, and at least one Agent 365 licence held by a user in it |
-| **Azure** | A subscription with an Azure OpenAI resource and a chat deployment |
-| **Permissions** | Application Developer or higher on your account, and a Global Administrator, either you or a colleague, to grant consent twice |
+| **Path 1** | CLI, SDK, Azure OpenAI, local code, sample agent clone, and admin consent handoffs |
+| **Path 2** | Copilot Studio new experience, tenant licensing and credits, Defender connector readiness, and browser access to the right environment |
 
-The .NET 8 SDK is required for every stack, because the Agent 365 CLI is distributed as a .NET global tool.
-
-Two requirements involve other people: the Agent 365 licence in the tenant, and admin consent on the agent's permissions. Work through the prerequisites page before you open a lab.
+The .NET 8 SDK and Agent 365 CLI are required for **Path 1** because the CLI is distributed as a .NET global tool. **Path 2 does not use the CLI, PAC, local code, or Azure OpenAI.**
 
 ## How the labs are written
 
 Each lab is a sequence of **exercises**, and each exercise is a sequence of **steps**. Every exercise ends with a checkpoint stating what should be true before you move on, so you can stop between exercises and pick the lab up later.
 
-Most of the Agent 365 work is done by asking an AI coding assistant to do it for you, using the [Agent 365 Skills](https://github.com/microsoft/agent365-skills). Each step that uses a skill shows four things:
+Path 1 does most of the Agent 365 work by asking an AI coding assistant to do it for you, using the [Agent 365 Skills](https://github.com/microsoft/agent365-skills). Those steps show four things:
 
 1. **What you type**, the prompt you give your coding assistant
 2. **What the skill does**, the changes it makes
 3. **Behind the scenes**, the CLI command or code underneath
 4. **How to verify**, how to confirm it worked before moving on
 
-To complete the labs by hand, read parts 3 and 4 and skip the rest. Exercise 2 is the exception: signing users in with Entra is ordinary web app work, so no skill covers it.
+Path 2 provides text to paste into Copilot Studio, a complete `SKILL.md` to upload, and Defender queries. Its skill runs inside the agent; it is not a coding-assistant plugin. Browser steps use the same exercise, step, and checkpoint structure.
 
 ## Repository structure
 
 | Path | Contents |
 | --- | --- |
 | [`docs/index.md`](./docs/index.md) | Landing page of the documentation site |
-| [`docs/00-prerequisites.md`](./docs/00-prerequisites.md) | Tools, licences, and permissions shared by every lab |
+| [`docs/00-prerequisites.md`](./docs/00-prerequisites.md) | Shared prerequisites for Path 1, the custom web-app labs |
 | [`docs/01a-web-obo-dotnet.md`](./docs/01a-web-obo-dotnet.md) | Lab A365-01A, the .NET stack |
 | [`docs/01b-web-obo-python.md`](./docs/01b-web-obo-python.md) | Lab A365-01B, the Python stack |
 | [`docs/01c-web-obo-nodejs.md`](./docs/01c-web-obo-nodejs.md) | Lab A365-01C, the Node.js stack |
+| [`docs/02-copilot-studio.md`](./docs/02-copilot-studio.md) | Lab A365-02, Copilot Studio with the GitHub Copilot harness |
 | [`docs/99-sample-prompts.md`](./docs/99-sample-prompts.md) | Prompts chosen to produce specific, checkable telemetry |
 | `mkdocs.yml` | Documentation site configuration |
 | `docs/stylesheets`, `docs/javascripts` | Site theme and widgets |
@@ -100,13 +114,15 @@ The site is served at `http://127.0.0.1:8000/agent365-labs/`. Pushing to `main` 
 
 The theme and the `cc-card` and `cc-next` widgets are adapted from the [Copilot Developer Camp](https://github.com/microsoft/copilot-camp), used under the MIT License.
 
-## Where the sample agents come from
+## Where the Path 1 sample agents come from
 
 The starting points for these labs are the three sample agents in the [Agent 365 runbook repository](https://github.com/qmatteoq/agent365-runbook), under `01-scenarios/Web-App-Agent-User-OBO/0.Resources/Starting-point/`. They are the same agent in three stacks: a research assistant that answers questions about Microsoft products by searching the [Microsoft Learn MCP server](https://learn.microsoft.com/api/mcp) and citing what it found. None of them contains any Agent 365 code.
 
 You can bring your own agent instead. The labs assume it runs as a web app with one HTTP request per turn, and that there is a single place in the code where a turn begins and ends, which is where the instrumentation goes.
 
 > This is a first draft. The sample agents are still referenced from the runbook repository instead of being vendored into this one, so cloning them is currently a manual step described in each lab.
+
+Path 2 starts with a new Copilot Studio agent. The lab includes its instructions and skill file.
 
 ## Related
 
