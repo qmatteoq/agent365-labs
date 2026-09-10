@@ -23,7 +23,7 @@ After completing this lab, you will be able to:
 
 ## Prerequisites
 
-Use the prerequisites below for this lab. The [shared prerequisites page](./00-prerequisites.md) covers the custom web-app labs in Path 1.
+Use the prerequisites below for this lab. The [shared prerequisites page](./00-prerequisites.md) covers the custom web-app labs in Path 2.
 
 You need a browser, a text editor to save one `SKILL.md` file, and Teams desktop or web. You do not need the GitHub Copilot CLI, Agent 365 CLI, PAC, a local agent project, or an Azure OpenAI resource.
 
@@ -159,7 +159,7 @@ Keep the bot ID separate from the Entra application/client ID, the Entra object 
 
 ## Exercise 2: Add a real MCP tool and a native runtime skill
 
-The tool connects to Microsoft Learn. The [skill](https://learn.microsoft.com/microsoft-copilot-studio/agents-experience/skills-overview) contains instructions for using it. This is a skill uploaded to the running agent, separate from the coding-assistant skills used in Path 1.
+The tool connects to Microsoft Learn. The [skill](https://learn.microsoft.com/microsoft-copilot-studio/agents-experience/skills-overview) contains instructions for using it. This is a skill uploaded to the running agent, separate from the coding-assistant skills used in Path 2.
 
 ### Step 1: Add the Microsoft Learn MCP server
 
@@ -320,4 +320,6 @@ You have completed **Lab A365-02** when the agent has the uploaded skill and Lea
 
 If either portal check is blocked, record the result as partial completion with the missing evidence. The agent can work correctly while a portal prerequisite or coverage gap prevents you from completing the observation steps.
 
-<cc-next label="See the sample prompts" url="../99-sample-prompts/"></cc-next>
+For extra test turns after this lab, see the [sample prompts](99-sample-prompts.md).
+
+<cc-next label="Continue with the Agent 365 SDK labs" url="../00-prerequisites/"></cc-next>
