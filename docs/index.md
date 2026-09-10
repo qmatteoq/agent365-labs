@@ -11,33 +11,33 @@ Each lab is designed to be completed in a single sitting. Path 1 stays in browse
 <div class="cc-cards">
 <cc-card-grid>
   <cc-card
-    title="Lab A365-02 — Copilot Studio"
+    title="Lab A365-01 — Copilot Studio"
     description="GitHub Copilot runtime harness in the Copilot Studio new experience. ~60-90 minutes, beginner to intermediate."
-    href="02-copilot-studio/"
+    href="01-copilot-studio/"
     target="_self">
   </cc-card>
   <cc-card
     title="SDK prerequisites"
-    description="Shared prerequisites for Path 2 only, the Agent 365 SDK and custom web-app labs. Lab A365-02 has its own prerequisite section."
+    description="Shared prerequisites for Path 2 only, the Agent 365 SDK and custom web-app labs. Lab A365-01 has its own prerequisite section."
     href="00-prerequisites/"
     target="_self">
   </cc-card>
   <cc-card
-    title="Lab A365-01A — .NET"
+    title="Lab A365-02A — .NET"
     description="Agent Framework on Blazor Server. ~3 hours, intermediate."
-    href="01a-web-obo-dotnet/"
+    href="02a-web-obo-dotnet/"
     target="_self">
   </cc-card>
   <cc-card
-    title="Lab A365-01B — Python"
+    title="Lab A365-02B — Python"
     description="LangChain on FastAPI. ~3 hours, intermediate."
-    href="01b-web-obo-python/"
+    href="02b-web-obo-python/"
     target="_self">
   </cc-card>
   <cc-card
-    title="Lab A365-01C — Node.js"
+    title="Lab A365-02C — Node.js"
     description="LangChain on Express, in TypeScript. ~3 hours, intermediate."
-    href="01c-web-obo-nodejs/"
+    href="02c-web-obo-nodejs/"
     target="_self">
   </cc-card>
 </cc-card-grid>
@@ -49,26 +49,26 @@ Each lab is designed to be completed in a single sitting. Path 1 stays in browse
 
 Start with this lab. Create an agent in Copilot Studio using the GitHub Copilot harness. Add the Microsoft Learn MCP server and a native skill in the builder, confirm tool use in Preview, and inspect its activity. Copilot Studio emits the telemetry automatically; you do not add instrumentation.
 
-This lab has its own tenant and Defender prerequisites. It also explains the current uncertainty about Copilot Studio coverage in the admin-center Activity view.
+This lab has its own tenant and Defender prerequisites. Check Activity availability in your tenant before relying on that surface.
 
 | Lab | Runtime and authoring surface | Duration | Level |
 | --- | --- | --- | --- |
-| [A365-02](02-copilot-studio.md) | Copilot Studio new experience with the GitHub Copilot runtime harness | ~60-90 minutes, plus admin prework and indexing | Beginner to intermediate |
+| [A365-01](01-copilot-studio.md) | Copilot Studio new experience with the GitHub Copilot runtime harness | ~60-90 minutes, plus admin prework and indexing | Beginner to intermediate |
 
 ### Path 2: Agent 365 SDK and web app agent with user on-behalf-of
 
-After A365-02, continue here if you want the SDK path. A user opens a web page, signs in, and drives the agent. Everything the agent does is attributed back to that person. The same lab is available in three stacks, and you only need to complete one of them.
+After A365-01, continue here if you want the SDK path. A user opens a web page, signs in, and drives the agent. Everything the agent does is attributed back to that person. The same lab is available in three stacks, and you only need to complete one of them.
 
 | Lab | Stack | Framework and host | Duration | Level |
 | --- | --- | --- | --- | --- |
-| [A365-01A](01a-web-obo-dotnet.md) | .NET 8 | Agent Framework on Blazor Server | ~3 hours | Intermediate |
-| [A365-01B](01b-web-obo-python.md) | Python 3.12 | LangChain on FastAPI | ~3 hours | Intermediate |
-| [A365-01C](01c-web-obo-nodejs.md) | Node.js 20.10 | LangChain on Express, in TypeScript | ~3 hours | Intermediate |
+| [A365-02A](02a-web-obo-dotnet.md) | .NET 8 | Agent Framework on Blazor Server | ~3 hours | Intermediate |
+| [A365-02B](02b-web-obo-python.md) | Python 3.12 | LangChain on FastAPI | ~3 hours | Intermediate |
+| [A365-02C](02c-web-obo-nodejs.md) | Node.js 20.10 | LangChain on Express, in TypeScript | ~3 hours | Intermediate |
 
 Pick the stack you are most comfortable debugging in. The three labs reach the same destination and the Agent 365 concepts are identical, so nothing later depends on which one you choose.
 
 !!! warning "Work IQ availability"
-    Work IQ is not yet available for Python with LangChain. Lab A365-01B covers Exercise 5 as an explanation of the gap instead of an implementation. Choose .NET or Node.js to build the Microsoft 365 data access end to end.
+    Work IQ is not yet available for Python with LangChain. Lab A365-02B covers Exercise 5 as an explanation of the gap instead of an implementation. Choose .NET or Node.js to build the Microsoft 365 data access end to end.
 
 ## What the labs cover
 
@@ -79,7 +79,7 @@ Path 1, the Copilot Studio runtime-harness path, moves through five stages:
 | 1 | Create the agent in the new experience | A Copilot Studio agent in the runtime harness, with recorded environment and bot identifiers |
 | 2 | Add a real MCP tool and a native runtime skill | A Microsoft Learn tool connection and a `learn-research` skill created in the builder |
 | 3 | Prove tool use in Preview | An activity trace with a real `microsoft_docs_search` call |
-| 4 | Generate an authenticated same-tenant run and check Activity | Evidence for the test period in the Microsoft 365 admin center, or a documented gap if that surface stays incomplete |
+| 4 | Generate an authenticated same-tenant run and check Activity | Evidence for the test period in the Microsoft 365 admin center, or partial-completion notes if that surface stays incomplete |
 | 5 | Hunt the traces in Defender | Matching invocation and Microsoft Learn tool events for the same conversation and time window |
 
 Path 2, the custom web-app path, follows the same six exercises:
@@ -99,7 +99,7 @@ The prerequisites are path-specific:
 
 | Path | Start here |
 | --- | --- |
-| **Path 1 - Copilot Studio runtime harness** | [Lab A365-02 prerequisites](02-copilot-studio.md#prerequisites) |
+| **Path 1 - Copilot Studio runtime harness** | [Lab A365-01 prerequisites](01-copilot-studio.md#prerequisites) |
 | **Path 2 - Agent 365 SDK / custom web app** | [SDK prerequisites](00-prerequisites.md) |
 
 Path 1 needs Copilot Studio access and the tenant setup described in its prerequisites. Path 2 needs the CLI, a language SDK, Azure OpenAI, and a sample agent checkout.
@@ -146,4 +146,4 @@ These labs are under active development. [Open an issue](https://github.com/qmat
 
 This repository is a community resource and is not an official Microsoft product. Agent 365 is evolving, and commands, scopes and identifiers change. Verify against the [official Agent 365 documentation](https://learn.microsoft.com/microsoft-agent-365/) before relying on anything here in production.
 
-<cc-next label="Start with Lab A365-02" url="02-copilot-studio/"></cc-next>
+<cc-next label="Start with Lab A365-01" url="01-copilot-studio/"></cc-next>

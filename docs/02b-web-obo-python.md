@@ -1,4 +1,4 @@
-# Lab A365-01B - Web App Agent with User OBO (Python)
+# Lab A365-02B - Web App Agent with User OBO (Python)
 
 > **Stack**: Python 3.12, LangChain, FastAPI **Duration**: around 3 hours **Level**: Intermediate
 
@@ -815,7 +815,7 @@ Validate the Agent 365 observability code in this project.
 
 ## Completion
 
-You have completed **Lab A365-01B**. You started with a Python web agent that answered questions anonymously and onboarded it to Agent 365. Along the way you learned:
+You have completed **Lab A365-02B**. You started with a Python web agent that answered questions anonymously and onboarded it to Agent 365. Along the way you learned:
 
 - ✅ **Identity separation**: why an agent needs three identities (sign-in client, blueprint, agent identity) and why a blueprint cannot sign users in.
 
@@ -839,8 +839,8 @@ You have completed **Lab A365-01B**. You started with a Python web agent that an
 | --- | --- |
 | Prerequisites | [00-prerequisites.md](./00-prerequisites.md) |
 | Sample prompts | [99-sample-prompts.md](./99-sample-prompts.md) |
-| The same lab in .NET | [01a-web-obo-dotnet.md](./01a-web-obo-dotnet.md) |
-| The same lab in Node.js | [01c-web-obo-nodejs.md](./01c-web-obo-nodejs.md) |
+| The same lab in .NET | [02a-web-obo-dotnet.md](./02a-web-obo-dotnet.md) |
+| The same lab in Node.js | [02c-web-obo-nodejs.md](./02c-web-obo-nodejs.md) |
 | Agent on-behalf-of OAuth flow | https://learn.microsoft.com/entra/agent-id/agent-on-behalf-of-oauth-flow |
 | Agent 365 observability concepts | https://learn.microsoft.com/microsoft-agent-365/developer/observability-concepts |
 | Agent 365 Skills | https://github.com/microsoft/agent365-skills |

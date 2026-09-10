@@ -2,11 +2,11 @@
 
 This page is for **Path 2**, the Agent 365 SDK and custom web-app labs:
 
-- [Lab A365-01A: .NET](./01a-web-obo-dotnet.md)
-- [Lab A365-01B: Python](./01b-web-obo-python.md)
-- [Lab A365-01C: Node.js](./01c-web-obo-nodejs.md)
+- [Lab A365-02A: .NET](./02a-web-obo-dotnet.md)
+- [Lab A365-02B: Python](./02b-web-obo-python.md)
+- [Lab A365-02C: Node.js](./02c-web-obo-nodejs.md)
 
-If you are taking the browser-first Copilot Studio runtime-harness path, use the self-contained prerequisites in [Lab A365-02](./02-copilot-studio.md#prerequisites) instead.
+If you are taking the browser-first Copilot Studio runtime-harness path, use the self-contained prerequisites in [Lab A365-01](./01-copilot-studio.md#prerequisites) instead.
 
 Every **Path 2** lab in this repository requires the same three things: tools on your machine, licences in your tenant, and permissions on your account.
 
@@ -24,7 +24,7 @@ Every **Path 2** lab in this repository requires the same three things: tools on
 | uv | latest | `uv --version` | The Python lab only |
 | Node.js | 20.10 | `node --version` | The Node.js lab only |
 
-> The .NET 8 SDK is required even if your agent is written in Python or TypeScript. The Agent 365 CLI is distributed as a .NET global tool, so .NET must be installed to run it. This is unrelated to the language your agent is written in. This requirement is for **Path 2** only; Lab A365-02 does not use the CLI.
+> The .NET 8 SDK is required even if your agent is written in Python or TypeScript. The Agent 365 CLI is distributed as a .NET global tool, so .NET must be installed to run it. This is unrelated to the language your agent is written in. This requirement is for **Path 2** only; Lab A365-01 does not use the CLI.
 
 A key requirement for the labs is the Agent 365 CLI, which you can install with the following command:
 
@@ -47,7 +47,7 @@ Most of the Agent 365 work in the **Path 2** labs is done by asking an AI coding
 
 Run the install from **your agent's project folder**, so the skills can see the code they are meant to change.
 
-> Lab A365-02 does not use these coding-assistant skills. It uses a native skill created inside the Copilot Studio browser authoring experience.
+> Lab A365-01 does not use these coding-assistant skills. It uses a native skill created inside the Copilot Studio browser authoring experience.
 
 ## The licences your tenant needs for Path 2
 
@@ -82,9 +82,9 @@ cd agent365-runbook/01-scenarios/Web-App-Agent-User-OBO/0.Resources/Starting-poi
 
 | Lab | Folder |
 | --- | --- |
-| A365-01A (.NET) | `dotnet/` |
-| A365-01B (Python) | `python/` |
-| A365-01C (Node.js) | `nodejs/` |
+| A365-02A (.NET) | `dotnet/` |
+| A365-02B (Python) | `python/` |
+| A365-02C (Node.js) | `nodejs/` |
 
 You can bring your own agent instead. The Path 2 labs assume two things about it: it runs as a web app with one HTTP request per turn, and there is a single place in the code where a turn begins and ends, which is where the instrumentation goes.
 
@@ -101,8 +101,8 @@ Also note the id of the tenant that owns that resource. Without it, the credenti
 
 Once all four sections check out, open the lab for your stack:
 
-- [Lab A365-01A: .NET](./01a-web-obo-dotnet.md)
-- [Lab A365-01B: Python](./01b-web-obo-python.md)
-- [Lab A365-01C: Node.js](./01c-web-obo-nodejs.md)
+- [Lab A365-02A: .NET](./02a-web-obo-dotnet.md)
+- [Lab A365-02B: Python](./02b-web-obo-python.md)
+- [Lab A365-02C: Node.js](./02c-web-obo-nodejs.md)
 
-If you are taking the browser-first Copilot Studio runtime-harness path instead, open [Lab A365-02](./02-copilot-studio.md).
+If you are taking the browser-first Copilot Studio runtime-harness path instead, open [Lab A365-01](./01-copilot-studio.md).

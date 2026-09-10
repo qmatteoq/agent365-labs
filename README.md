@@ -14,25 +14,25 @@ Each lab is designed to be completed in a single sitting. Path 1 stays in browse
 
 Start here. Create an agent in Copilot Studio using the GitHub Copilot harness. Add the Microsoft Learn MCP server and a native skill in the builder, confirm tool use in Preview, and inspect its activity. Copilot Studio emits the telemetry automatically; you do not add instrumentation.
 
-This lab has its own tenant and Defender prerequisites. It also explains the current uncertainty about Copilot Studio coverage in the admin-center Activity view.
+This lab has its own tenant and Defender prerequisites. Check Activity availability in your tenant before relying on that surface.
 
 | Lab | Runtime and authoring surface | Duration | Level |
 | --- | --- | --- | --- |
-| [A365-02](./docs/02-copilot-studio.md) | Copilot Studio new experience with the GitHub Copilot runtime harness | ~60-90 minutes, plus admin prework and indexing | Beginner to intermediate |
+| [A365-01](./docs/01-copilot-studio.md) | Copilot Studio new experience with the GitHub Copilot runtime harness | ~60-90 minutes, plus admin prework and indexing | Beginner to intermediate |
 
 ### Path 2: Agent 365 SDK and web app agent with user on-behalf-of
 
-After A365-02, continue here if you want the SDK path. A user opens a web page, signs in, and drives the agent. Everything the agent does is attributed back to that person. The same lab is available in three stacks, and you only need to complete one of them.
+After A365-01, continue here if you want the SDK path. A user opens a web page, signs in, and drives the agent. Everything the agent does is attributed back to that person. The same lab is available in three stacks, and you only need to complete one of them.
 
 | Lab | Stack | Framework and host | Duration | Level |
 | --- | --- | --- | --- | --- |
-| [A365-01A](./docs/01a-web-obo-dotnet.md) | .NET 8 | Agent Framework on Blazor Server | ~3 hours | Intermediate |
-| [A365-01B](./docs/01b-web-obo-python.md) | Python 3.12 | LangChain on FastAPI | ~3 hours | Intermediate |
-| [A365-01C](./docs/01c-web-obo-nodejs.md) | Node.js 20.10 | LangChain on Express, in TypeScript | ~3 hours | Intermediate |
+| [A365-02A](./docs/02a-web-obo-dotnet.md) | .NET 8 | Agent Framework on Blazor Server | ~3 hours | Intermediate |
+| [A365-02B](./docs/02b-web-obo-python.md) | Python 3.12 | LangChain on FastAPI | ~3 hours | Intermediate |
+| [A365-02C](./docs/02c-web-obo-nodejs.md) | Node.js 20.10 | LangChain on Express, in TypeScript | ~3 hours | Intermediate |
 
 Pick the stack you are most comfortable debugging in. The three labs reach the same destination and the Agent 365 concepts are identical, so nothing later depends on which one you choose.
 
-> Work IQ is not yet available for Python with LangChain. Lab A365-01B covers Exercise 5 as an explanation of the gap instead of an implementation. Choose .NET or Node.js to build the Microsoft 365 data access end to end.
+> Work IQ is not yet available for Python with LangChain. Lab A365-02B covers Exercise 5 as an explanation of the gap instead of an implementation. Choose .NET or Node.js to build the Microsoft 365 data access end to end.
 
 ## What the labs cover
 
@@ -43,7 +43,7 @@ Path 1, the Copilot Studio runtime-harness path, moves through five stages:
 | 1 | Create the agent in the new experience | A Copilot Studio agent in the GitHub Copilot runtime harness, with recorded environment and bot identifiers |
 | 2 | Add a real MCP tool and a native runtime skill | A Microsoft Learn tool connection and a `learn-research` skill created in the builder |
 | 3 | Prove tool use in Preview | An activity trace with a real `microsoft_docs_search` call |
-| 4 | Generate an authenticated same-tenant run and check Activity | Evidence for the test period in the Microsoft 365 admin center, or a documented gap if that surface stays incomplete |
+| 4 | Generate an authenticated same-tenant run and check Activity | Evidence for the test period in the Microsoft 365 admin center, or partial-completion notes if that surface stays incomplete |
 | 5 | Hunt the traces in Defender | Matching invocation and Microsoft Learn tool events for the same conversation and time window |
 
 Path 2, the custom web-app path, follows the same six exercises across all three stacks:
@@ -63,7 +63,7 @@ The prerequisites are **path-specific**:
 
 | Path | Start here |
 | --- | --- |
-| **Path 1 - Copilot Studio runtime harness** | [Lab A365-02 prerequisites](./docs/02-copilot-studio.md#prerequisites) |
+| **Path 1 - Copilot Studio runtime harness** | [Lab A365-01 prerequisites](./docs/01-copilot-studio.md#prerequisites) |
 | **Path 2 - Agent 365 SDK / custom web app** | [SDK prerequisites](./docs/00-prerequisites.md) |
 
 | | |
@@ -91,11 +91,11 @@ Path 2 does most of the Agent 365 work by asking an AI coding assistant to do it
 | Path | Contents |
 | --- | --- |
 | [`docs/index.md`](./docs/index.md) | Landing page of the documentation site |
-| [`docs/02-copilot-studio.md`](./docs/02-copilot-studio.md) | Lab A365-02, Copilot Studio with the GitHub Copilot harness |
+| [`docs/01-copilot-studio.md`](./docs/01-copilot-studio.md) | Lab A365-01, Copilot Studio with the GitHub Copilot harness |
 | [`docs/00-prerequisites.md`](./docs/00-prerequisites.md) | Shared prerequisites for Path 2, the SDK and custom web-app labs |
-| [`docs/01a-web-obo-dotnet.md`](./docs/01a-web-obo-dotnet.md) | Lab A365-01A, the .NET stack |
-| [`docs/01b-web-obo-python.md`](./docs/01b-web-obo-python.md) | Lab A365-01B, the Python stack |
-| [`docs/01c-web-obo-nodejs.md`](./docs/01c-web-obo-nodejs.md) | Lab A365-01C, the Node.js stack |
+| [`docs/02a-web-obo-dotnet.md`](./docs/02a-web-obo-dotnet.md) | Lab A365-02A, the .NET stack |
+| [`docs/02b-web-obo-python.md`](./docs/02b-web-obo-python.md) | Lab A365-02B, the Python stack |
+| [`docs/02c-web-obo-nodejs.md`](./docs/02c-web-obo-nodejs.md) | Lab A365-02C, the Node.js stack |
 | [`docs/99-sample-prompts.md`](./docs/99-sample-prompts.md) | Prompts chosen to produce specific, checkable telemetry |
 | `mkdocs.yml` | Documentation site configuration |
 | `docs/stylesheets`, `docs/javascripts` | Site theme and widgets |

@@ -1,4 +1,4 @@
-# Lab A365-01C - Web App Agent with User OBO (Node.js)
+# Lab A365-02C - Web App Agent with User OBO (Node.js)
 
 > **Stack**: Node.js 20.10, TypeScript, LangChain, Express **Duration**: around 3 hours **Level**: Intermediate
 
@@ -938,7 +938,7 @@ Validate the Agent 365 observability code in this project.
 
 ## Completion
 
-You have completed **Lab A365-01C**. You started with an ordinary web agent and added:
+You have completed **Lab A365-02C**. You started with an ordinary web agent and added:
 
 - ✅ **Identity separation**: three identities (sign-in client, blueprint, agent identity) and why a blueprint cannot sign users in.
 
@@ -962,8 +962,8 @@ You have completed **Lab A365-01C**. You started with an ordinary web agent and 
 | --- | --- |
 | Prerequisites | [00-prerequisites.md](./00-prerequisites.md) |
 | Sample prompts | [99-sample-prompts.md](./99-sample-prompts.md) |
-| The same lab in .NET | [01a-web-obo-dotnet.md](./01a-web-obo-dotnet.md) |
-| The same lab in Python | [01b-web-obo-python.md](./01b-web-obo-python.md) |
+| The same lab in .NET | [02a-web-obo-dotnet.md](./02a-web-obo-dotnet.md) |
+| The same lab in Python | [02b-web-obo-python.md](./02b-web-obo-python.md) |
 | Agent on-behalf-of OAuth flow | https://learn.microsoft.com/entra/agent-id/agent-on-behalf-of-oauth-flow |
 | Agent 365 observability concepts | https://learn.microsoft.com/microsoft-agent-365/developer/observability-concepts |
 | Agent 365 Skills | https://github.com/microsoft/agent365-skills |
